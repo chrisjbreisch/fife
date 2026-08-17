@@ -28,6 +28,16 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansAlternateInequalityOperator()
+    {
+        var tokens = Scan("1 <> 2");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Number, TokenType.BangEqual, TokenType.Number, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void ScansIntKeyword()
     {
         var tokens = Scan("int x");

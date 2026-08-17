@@ -21,6 +21,12 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void SupportsBothInequalityOperators()
+    {
+        Assert.AreEqual("true\ntrue", Run("writeln(1 != 2)\nwriteln(1 <> 2)\n"));
+    }
+
+    [TestMethod]
     public void SupportsIntDeclarationsAndAssignments()
     {
         Assert.AreEqual("0\n3", Run("int x\nwriteln(x)\nx = 3\nwriteln(x)\n"));
