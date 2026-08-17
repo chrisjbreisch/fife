@@ -69,7 +69,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         {
             if (Match(TokenType.Fun)) return Function("function");
             if (Match(TokenType.Var)) return VarDeclaration();
-            if (Match(TokenType.Int)) return VarDeclaration(isInt: true);
+            if (Match(TokenType.Int)) return VarDeclaration(type: FifeType.Int);
             if (Match(TokenType.Float)) return VarDeclaration(type: FifeType.Float);
             if (Match(TokenType.Bool)) return VarDeclaration(type: FifeType.Bool);
             if (Match(TokenType.StringType)) return VarDeclaration(type: FifeType.String);
@@ -107,7 +107,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         return new Stmt.Function(name, parameters, Block());
     }
 
-    private Stmt VarDeclaration(bool hasStatementTerminator = true, bool isInt = false, FifeType type = FifeType.Dynamic)
+    private Stmt VarDeclaration(bool hasStatementTerminator = true, FifeType type = FifeType.Dynamic)
     {
         var name = Consume(TokenType.Identifier, "Expect variable name.");
         var initializer = Match(TokenType.Equal) ? Expression() : null;
@@ -115,7 +115,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         {
             ConsumeStatementTerminator("Expect end of variable declaration.");
         }
-        return new Stmt.Var(name, initializer, isInt ? FifeType.Int : type);
+        return new Stmt.Var(name, initializer, type);
     }
 
     private Stmt Statement()
@@ -142,7 +142,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         }
         else if (Match(TokenType.Int))
         {
-            initializer = VarDeclaration(false, true);
+            initializer = VarDeclaration(type: FifeType.Int, hasStatementTerminator: false);
             Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
         }
         else if (Match(TokenType.Float))

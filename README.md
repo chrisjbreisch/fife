@@ -1,6 +1,6 @@
 # fife
 
-A small scripting language implemented in C#, based on the tree-walking `jlox` interpreter from
+A small scripting language implemented in C#, based on the tree-walking interpreter design from
 Robert Nystrom's [Crafting Interpreters](https://craftinginterpreters.com/).
 
 ## Layout
