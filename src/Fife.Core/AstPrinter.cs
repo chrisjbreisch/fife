@@ -37,7 +37,6 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
         ? $"(if {Print(stmt.Condition)} {stmt.ThenBranch.Accept(this)})"
         : $"(if-else {Print(stmt.Condition)} {stmt.ThenBranch.Accept(this)} {stmt.ElseBranch.Accept(this)})";
 
-    public string VisitPrintStmt(Stmt.Print stmt) => Parenthesize("print", stmt.Expr);
 
     public string VisitReturnStmt(Stmt.Return stmt) =>
         stmt.Value is null ? "(return)" : Parenthesize("return", stmt.Value);

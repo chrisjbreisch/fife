@@ -5,7 +5,7 @@ namespace Fife.Core;
 ///
 /// program     -> declaration* EOF ;
 /// declaration -> funDecl | varDecl | statement ;
-/// statement   -> exprStmt | forStmt | ifStmt | printStmt | returnStmt | whileStmt | block ;
+/// statement   -> exprStmt | forStmt | ifStmt | returnStmt | whileStmt | block ;
 /// expression  -> assignment ;
 /// assignment  -> IDENTIFIER "=" assignment | logic_or ;
 /// logic_or    -> logic_and ( "or" logic_and )* ;
@@ -118,7 +118,6 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     {
         if (Match(TokenType.For)) return ForStatement();
         if (Match(TokenType.If)) return IfStatement();
-        if (Match(TokenType.Print)) return PrintStatement();
         if (Match(TokenType.Return)) return ReturnStatement();
         if (Match(TokenType.While)) return WhileStatement();
         if (Match(TokenType.LeftBrace)) return new Stmt.Block(Block());
@@ -177,13 +176,6 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         SkipNewLines();
         var elseBranch = Match(TokenType.Else) ? Statement() : null;
         return new Stmt.If(condition, thenBranch, elseBranch);
-    }
-
-    private Stmt PrintStatement()
-    {
-        var value = Expression();
-        ConsumeStatementTerminator("Expect end of value.");
-        return new Stmt.Print(value);
     }
 
     private Stmt ReturnStatement()
@@ -474,7 +466,6 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
                 case TokenType.For:
                 case TokenType.If:
                 case TokenType.While:
-                case TokenType.Print:
                 case TokenType.Return:
                     return;
             }

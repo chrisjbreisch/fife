@@ -17,7 +17,7 @@ public sealed class InterpreterTests
     [TestMethod]
     public void PrintsArithmeticResult()
     {
-        Assert.AreEqual("7", Run("print 1 + 2 * 3\n"));
+        Assert.AreEqual("7", Run("writeln(1 + 2 * 3)\n"));
     }
 
     [TestMethod]
@@ -28,7 +28,7 @@ public sealed class InterpreterTests
         StringReader input = new("xy\n");
         FifeEngine engine = new(errors, output, input);
 
-        engine.Run("write(\"a\")\nwriteln(\"b\")\nwriteln()\nprint read(\"r:\")\nprint readln(\"l:\")\n");
+        engine.Run("write(\"a\")\nwriteln(\"b\")\nwriteln()\nwriteln(read(\"r:\"))\nwriteln(readln(\"l:\"))\n");
 
         Assert.AreEqual("ab\n\nr:120\nl:y\n", output.ToString().ReplaceLineEndings("\n"));
         Assert.IsFalse(engine.HadError);
@@ -41,7 +41,7 @@ public sealed class InterpreterTests
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
 
-        engine.RunRepl("print 3");
+        engine.RunRepl("writeln(3)");
 
         Assert.AreEqual("3\n", output.ToString().ReplaceLineEndings("\n"));
         Assert.IsFalse(engine.HadError);
@@ -58,7 +58,7 @@ public sealed class InterpreterTests
         Assert.AreEqual("", output.ToString());
         Assert.IsFalse(engine.HadError);
 
-        engine.RunRepl("print 3");
+        engine.RunRepl("writeln(3)");
         engine.RunRepl("}");
 
         Assert.AreEqual("3\n", output.ToString().ReplaceLineEndings("\n"));
@@ -68,58 +68,58 @@ public sealed class InterpreterTests
     [TestMethod]
     public void UsesNewlinesAndLineContinuationsForStatements()
     {
-        Assert.AreEqual("3\n7", Run("print 1 + 2\nprint 3 + \\\n" + "4\n"));
+        Assert.AreEqual("3\n7", Run("writeln(1 + 2)\nwriteln(3 + \\\n" + "4)\n"));
     }
 
     [TestMethod]
     public void EvaluatesExponentiationAndFactorial()
     {
         Assert.AreEqual("8\n1\n2\n6\n24\n120\n720", Run(
-            "print 2 ^ 3\nprint 1!!\nprint 2!!\nprint 3!!\nprint 4!!\nprint 5!!\nprint 6!!\n"));
+            "writeln(2 ^ 3)\nwriteln(1!!)\nwriteln(2!!)\nwriteln(3!!)\nwriteln(4!!)\nwriteln(5!!)\nwriteln(6!!)\n"));
     }
 
     [TestMethod]
     public void RespectsGroupingPrecedence()
     {
-        Assert.AreEqual("9", Run("print (1 + 2) * 3\n"));
+        Assert.AreEqual("9", Run("writeln((1 + 2) * 3)\n"));
     }
 
     [TestMethod]
     public void ConcatenatesStrings()
     {
-        Assert.AreEqual("fife lang", Run("print \"fife\" + \" \" + \"lang\"\n"));
+        Assert.AreEqual("fife lang", Run("writeln(\"fife\" + \" \" + \"lang\")\n"));
     }
 
     [TestMethod]
     public void ScopesVariablesToBlocks()
     {
         Assert.AreEqual("inner\nouter", Run(
-            "var a = \"outer\"\n{\nvar a = \"inner\"\nprint a\n}\nprint a\n"));
+            "var a = \"outer\"\n{\nvar a = \"inner\"\nwriteln(a)\n}\nwriteln(a)\n"));
     }
 
     [TestMethod]
     public void ExecutesWhileLoops()
     {
-        Assert.AreEqual("0\n1\n2", Run("for (var i = 0; i < 3; i = i + 1) print i\n"));
+        Assert.AreEqual("0\n1\n2", Run("for (var i = 0; i < 3; i = i + 1) writeln(i)\n"));
     }
 
     [TestMethod]
     public void ShortCircuitsLogicalOperators()
     {
-        Assert.AreEqual("true", Run("print true or unknownVariable\n"));
+        Assert.AreEqual("true", Run("writeln(true or unknownVariable)\n"));
     }
 
     [TestMethod]
     public void CallsFunctionsAndReturnsValues()
     {
-        Assert.AreEqual("3", Run("fun add(a, b) { return a + b\n}\nprint add(1, 2)\n"));
+        Assert.AreEqual("3", Run("fun add(a, b) { return a + b\n}\nwriteln(add(1, 2))\n"));
     }
 
     [TestMethod]
     public void ClosesOverEnclosingScope()
     {
         Assert.AreEqual("1\n2", Run(
-            "fun counter() {\nvar n = 0\nfun next() {\nn = n + 1\nreturn n\n}\nreturn next\n}\nvar c = counter()\nprint c()\nprint c()\n"));
+            "fun counter() {\nvar n = 0\nfun next() {\nn = n + 1\nreturn n\n}\nreturn next\n}\nvar c = counter()\nwriteln(c())\nwriteln(c())\n"));
     }
 
     [TestMethod]
@@ -128,7 +128,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("print 1 - \"two\"\n");
+        engine.Run("writeln(1 - \"two\")\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Operands must be numbers.");
@@ -140,7 +140,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("print 1 +;");
+        engine.Run("writeln(1 +)\n");
 
         Assert.IsTrue(engine.HadError);
     }

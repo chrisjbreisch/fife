@@ -30,7 +30,7 @@ public sealed class ParserTests
     [TestMethod]
     public void ParsesNewlineTerminatedStatements()
     {
-        Assert.AreEqual("(print (+ 1 2))", Print("print 1 + \\\n" + "2\n"));
+        Assert.AreEqual("(; (call writeln (+ 1 2)))", Print("writeln(1 + \\\n" + "2)\n"));
     }
 
     [TestMethod]
@@ -42,7 +42,7 @@ public sealed class ParserTests
     [TestMethod]
     public void DesugarsForIntoWhile()
     {
-        StringAssert.Contains(Print("for (var i = 0; i < 2; i = i + 1) print i\n"), "(while");
+        StringAssert.Contains(Print("for (var i = 0; i < 2; i = i + 1) writeln(i)\n"), "(while");
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public sealed class ParserTests
     public void RejectsSemicolonAsStatementTerminator()
     {
         ConsoleErrorReporter errors = new(new StringWriter());
-        var tokens = new Scanner("print 1;\n", errors).ScanTokens();
+        var tokens = new Scanner("writeln(1);\n", errors).ScanTokens();
         new Parser(tokens, errors).Parse();
 
         Assert.IsTrue(errors.HadError);

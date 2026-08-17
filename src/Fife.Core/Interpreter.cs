@@ -132,12 +132,6 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         return null;
     }
 
-    public object? VisitPrintStmt(Stmt.Print stmt)
-    {
-        Output.WriteLine(Stringify(Evaluate(stmt.Expr)));
-        return null;
-    }
-
     public object? VisitReturnStmt(Stmt.Return stmt) =>
         throw new ReturnException(stmt.Value is null ? null : Evaluate(stmt.Value));
 

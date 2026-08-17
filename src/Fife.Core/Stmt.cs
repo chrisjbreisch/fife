@@ -10,7 +10,6 @@ public abstract class Stmt
         T VisitExpressionStmt(Expression stmt);
         T VisitFunctionStmt(Function stmt);
         T VisitIfStmt(If stmt);
-        T VisitPrintStmt(Print stmt);
         T VisitReturnStmt(Return stmt);
         T VisitVarStmt(Var stmt);
         T VisitWhileStmt(While stmt);
@@ -42,12 +41,6 @@ public abstract class Stmt
         public Stmt ThenBranch { get; } = thenBranch;
         public Stmt? ElseBranch { get; } = elseBranch;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitIfStmt(this);
-    }
-
-    public sealed class Print(Expr expression) : Stmt
-    {
-        public Expr Expr { get; } = expression;
-        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitPrintStmt(this);
     }
 
     public sealed class Return(Token keyword, Expr? value) : Stmt
