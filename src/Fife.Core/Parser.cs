@@ -69,6 +69,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         {
             if (Match(TokenType.Fun)) return Function("function");
             if (Match(TokenType.Var)) return VarDeclaration();
+            if (Match(TokenType.Int)) return VarDeclaration(isInt: true);
             return Statement();
         }
         catch (ParseError)
@@ -103,7 +104,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         return new Stmt.Function(name, parameters, Block());
     }
 
-    private Stmt VarDeclaration(bool hasStatementTerminator = true)
+    private Stmt VarDeclaration(bool hasStatementTerminator = true, bool isInt = false)
     {
         var name = Consume(TokenType.Identifier, "Expect variable name.");
         var initializer = Match(TokenType.Equal) ? Expression() : null;
@@ -111,7 +112,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         {
             ConsumeStatementTerminator("Expect end of variable declaration.");
         }
-        return new Stmt.Var(name, initializer);
+        return new Stmt.Var(name, initializer, isInt);
     }
 
     private Stmt Statement()
@@ -134,6 +135,11 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         else if (Match(TokenType.Var))
         {
             initializer = VarDeclaration(false);
+            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
+        }
+        else if (Match(TokenType.Int))
+        {
+            initializer = VarDeclaration(false, true);
             Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
         }
         else
@@ -465,6 +471,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
                 case TokenType.Var:
                 case TokenType.For:
                 case TokenType.If:
+                case TokenType.Int:
                 case TokenType.While:
                 case TokenType.Return:
                     return;

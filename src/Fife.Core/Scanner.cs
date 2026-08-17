@@ -11,6 +11,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
         ["for"] = TokenType.For,
         ["fun"] = TokenType.Fun,
         ["if"] = TokenType.If,
+        ["int"] = TokenType.Int,
         ["nil"] = TokenType.Nil,
         ["or"] = TokenType.Or,
         ["return"] = TokenType.Return,

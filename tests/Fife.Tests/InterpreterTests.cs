@@ -21,6 +21,25 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void SupportsIntDeclarationsAndAssignments()
+    {
+        Assert.AreEqual("0\n3", Run("int x\nwriteln(x)\nx = 3\nwriteln(x)\n"));
+    }
+
+    [TestMethod]
+    public void RejectsFractionalIntValues()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        engine.Run("int x = 1.5\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Integer variables require an integer value.");
+    }
+
+    [TestMethod]
     public void SupportsStandardIoFunctionsWithOptionalArguments()
     {
         StringWriter output = new();

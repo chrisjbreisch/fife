@@ -137,7 +137,13 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitVarStmt(Stmt.Var stmt)
     {
-        _environment.Define(stmt.Name.Lexeme, stmt.Initializer is null ? null : Evaluate(stmt.Initializer));
+        var value = stmt.Initializer is null ? (stmt.IsInt ? 0d : null) : Evaluate(stmt.Initializer);
+        if (stmt.IsInt && (value is not double number || number != Math.Truncate(number)))
+        {
+            throw new RuntimeError(stmt.Name, "Integer variables require an integer value.");
+        }
+
+        _environment.Define(stmt.Name.Lexeme, value, stmt.IsInt);
         return null;
     }
 

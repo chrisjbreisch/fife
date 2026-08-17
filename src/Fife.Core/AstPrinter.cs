@@ -42,8 +42,8 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
         stmt.Value is null ? "(return)" : Parenthesize("return", stmt.Value);
 
     public string VisitVarStmt(Stmt.Var stmt) => stmt.Initializer is null
-        ? $"(var {stmt.Name.Lexeme})"
-        : Parenthesize($"var {stmt.Name.Lexeme}", stmt.Initializer);
+        ? $"({(stmt.IsInt ? "int" : "var")} {stmt.Name.Lexeme})"
+        : Parenthesize($"{(stmt.IsInt ? "int" : "var")} {stmt.Name.Lexeme}", stmt.Initializer);
 
     public string VisitWhileStmt(Stmt.While stmt) => $"(while {Print(stmt.Condition)} {stmt.Body.Accept(this)})";
 

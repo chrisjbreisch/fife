@@ -52,6 +52,13 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesIntDeclarations()
+    {
+        Assert.AreEqual("(int x 3)", Print("int x = 3\n"));
+        Assert.AreEqual("(int x)", Print("int x\n"));
+    }
+
+    [TestMethod]
     public void RejectsSemicolonAsStatementTerminator()
     {
         ConsoleErrorReporter errors = new(new StringWriter());

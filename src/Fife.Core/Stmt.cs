@@ -50,10 +50,11 @@ public abstract class Stmt
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitReturnStmt(this);
     }
 
-    public sealed class Var(Token name, Expr? initializer) : Stmt
+    public sealed class Var(Token name, Expr? initializer, bool isInt = false) : Stmt
     {
         public Token Name { get; } = name;
         public Expr? Initializer { get; } = initializer;
+        public bool IsInt { get; } = isInt;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitVarStmt(this);
     }
 
