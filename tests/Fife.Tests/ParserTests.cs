@@ -59,6 +59,13 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesFloatDeclarations()
+    {
+        Assert.AreEqual("(float x 1.5)", Print("float x = 1.5\n"));
+        Assert.AreEqual("(float x)", Print("float x\n"));
+    }
+
+    [TestMethod]
     public void RejectsSemicolonAsStatementTerminator()
     {
         ConsoleErrorReporter errors = new(new StringWriter());

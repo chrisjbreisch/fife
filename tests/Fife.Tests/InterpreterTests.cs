@@ -27,6 +27,25 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void SupportsFloatDeclarationsAndAssignments()
+    {
+        Assert.AreEqual("0\n1.5", Run("float x\nwriteln(x)\nx = 1.5\nwriteln(x)\n"));
+    }
+
+    [TestMethod]
+    public void RejectsNonNumericFloatValues()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        engine.Run("float x = \"not a number\"\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Float variables require a number value.");
+    }
+
+    [TestMethod]
     public void RejectsFractionalIntValues()
     {
         StringWriter output = new();

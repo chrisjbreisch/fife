@@ -9,6 +9,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
         ["else"] = TokenType.Else,
         ["false"] = TokenType.False,
         ["for"] = TokenType.For,
+        ["float"] = TokenType.Float,
         ["fun"] = TokenType.Fun,
         ["if"] = TokenType.If,
         ["int"] = TokenType.Int,

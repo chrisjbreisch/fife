@@ -137,13 +137,20 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitVarStmt(Stmt.Var stmt)
     {
-        var value = stmt.Initializer is null ? (stmt.IsInt ? 0d : null) : Evaluate(stmt.Initializer);
-        if (stmt.IsInt && (value is not double number || number != Math.Truncate(number)))
+        var value = stmt.Initializer is null && stmt.Type is FifeType.Int or FifeType.Float
+            ? 0d
+            : stmt.Initializer is null ? null : Evaluate(stmt.Initializer);
+        if (stmt.Type == FifeType.Int && (value is not double number || number != Math.Truncate(number)))
         {
             throw new RuntimeError(stmt.Name, "Integer variables require an integer value.");
         }
 
-        _environment.Define(stmt.Name.Lexeme, value, stmt.IsInt);
+        if (stmt.Type == FifeType.Float && value is not double)
+        {
+            throw new RuntimeError(stmt.Name, "Float variables require a number value.");
+        }
+
+        _environment.Define(stmt.Name.Lexeme, value, stmt.Type);
         return null;
     }
 

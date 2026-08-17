@@ -42,8 +42,15 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
         stmt.Value is null ? "(return)" : Parenthesize("return", stmt.Value);
 
     public string VisitVarStmt(Stmt.Var stmt) => stmt.Initializer is null
-        ? $"({(stmt.IsInt ? "int" : "var")} {stmt.Name.Lexeme})"
-        : Parenthesize($"{(stmt.IsInt ? "int" : "var")} {stmt.Name.Lexeme}", stmt.Initializer);
+        ? $"({TypeName(stmt.Type)} {stmt.Name.Lexeme})"
+        : Parenthesize($"{TypeName(stmt.Type)} {stmt.Name.Lexeme}", stmt.Initializer);
+
+    private static string TypeName(FifeType type) => type switch
+    {
+        FifeType.Int => "int",
+        FifeType.Float => "float",
+        _ => "var"
+    };
 
     public string VisitWhileStmt(Stmt.While stmt) => $"(while {Print(stmt.Condition)} {stmt.Body.Accept(this)})";
 

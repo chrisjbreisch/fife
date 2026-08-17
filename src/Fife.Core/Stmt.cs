@@ -50,11 +50,11 @@ public abstract class Stmt
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitReturnStmt(this);
     }
 
-    public sealed class Var(Token name, Expr? initializer, bool isInt = false) : Stmt
+    public sealed class Var(Token name, Expr? initializer, FifeType type = FifeType.Dynamic) : Stmt
     {
         public Token Name { get; } = name;
         public Expr? Initializer { get; } = initializer;
-        public bool IsInt { get; } = isInt;
+        public FifeType Type { get; } = type;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitVarStmt(this);
     }
 

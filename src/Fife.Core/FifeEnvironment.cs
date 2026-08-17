@@ -3,19 +3,19 @@ namespace Fife.Core;
 /// <summary>A lexical scope: a chain of name-to-value bindings.</summary>
 public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
 {
-    private sealed class Binding(object? value, bool isInt)
+    private sealed class Binding(object? value, FifeType type)
     {
         public object? Value { get; set; } = value;
-        public bool IsInt { get; } = isInt;
+        public FifeType Type { get; } = type;
     }
 
     private readonly Dictionary<string, Binding> _values = [];
 
     public FifeEnvironment? Enclosing { get; } = enclosing;
 
-    public void Define(string name, object? value) => Define(name, value, false);
+    public void Define(string name, object? value) => Define(name, value, FifeType.Dynamic);
 
-    public void Define(string name, object? value, bool isInt) => _values[name] = new Binding(value, isInt);
+    public void Define(string name, object? value, FifeType type) => _values[name] = new Binding(value, type);
 
     public object? Get(Token name)
     {
@@ -33,9 +33,14 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
         {
             if (env._values.TryGetValue(name.Lexeme, out var binding))
             {
-                if (binding.IsInt && (value is not double number || number != Math.Truncate(number)))
+                if (binding.Type == FifeType.Int && (value is not double number || number != Math.Truncate(number)))
                 {
                     throw new RuntimeError(name, "Integer variables require an integer value.");
+                }
+
+                if (binding.Type == FifeType.Float && value is not double)
+                {
+                    throw new RuntimeError(name, "Float variables require a number value.");
                 }
 
                 binding.Value = value;

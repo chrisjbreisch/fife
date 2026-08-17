@@ -38,6 +38,16 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansFloatKeyword()
+    {
+        var tokens = Scan("float x");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Float, TokenType.Identifier, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void ScansExponentAndFactorialOperators()
     {
         var tokens = Scan("2^3 6!!");
