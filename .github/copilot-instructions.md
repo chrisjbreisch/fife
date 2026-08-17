@@ -32,3 +32,4 @@
 - Add scanner, parser, and runtime tests for new syntax or operators.
 - Use injected `TextReader` and `TextWriter` streams when testing I/O behavior.
 - Keep README language and standard-library documentation synchronized with implementation changes.
+- After each completed step: validate it, update the README, LANGUAGE.md, and any relevant documentation, run the full test suite, commit the step separately, and push the active branch.
