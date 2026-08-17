@@ -26,47 +26,10 @@ dotnet run --project src/Fife.Cli -- examples/tour.fife   # run a script
 dotnet run --project src/Fife.Cli                          # start the REPL
 ```
 
-## Language today
+## Language Reference
 
-- Types: `int`, `float` (represented by C# `double`), `bool`, `string`, `nil`; `var` declarations are dynamic, while typed declarations are checked
-- Operators: `+ - * / ^`, `!!` (factorial), `== != <> < <= > >=`, `!`, `and`, `or`; `+` concatenates when either side is a string
-- Statements: `var`, blocks, `if`/`else`, `while`, `for`, `return`; statements end at a newline, and `\\` continues onto the next line. Semicolons are only used to separate clauses in `for` headers.
-- Functions: `fun` declarations with closures and recursion
-- Comments: `//` line comments and nestable `/* ... */` block comments
-- Standard library: `clock()`, `read()` / `read(prompt)`, `readln()` / `readln(prompt)`, `write()` / `write(value)`, and `writeln()` / `writeln(value)`
-
-```fife
-int count = 0
-count = count + 1
-writeln(count)
-
-float ratio = 1.5
-writeln(ratio)
-
-bool ready = true
-string name = "fife"
-writeln(ready)
-writeln(name)
-```
-
-```fife
-fun makeCounter() {
-  var count = 0
-  fun increment() {
-    count = count + 1
-    return count
-  }
-  return increment
-}
-
-var counter = makeCounter()
-writeln(counter()) // 1
-writeln(counter()) // 2
-```
-
-`read` reads one character and returns its numeric character code. `readln` reads a complete
-line. When given one argument, either function writes it as a prompt first. `write` and `writeln`
-optionally write one value; `writeln()` writes just a newline.
+See [LANGUAGE.md](LANGUAGE.md) for the types, operators, statement syntax, functions, comments,
+and standard library reference.
 
 ## Extending it
 
