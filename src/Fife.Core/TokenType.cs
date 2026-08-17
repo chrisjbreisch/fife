@@ -13,11 +13,11 @@ public enum TokenType
     Less, LessEqual,
 
     // Literals.
-    Identifier, String, Number,
+    Identifier, String, StringType, Number,
 
     // Keywords.
     And, Class, Else, False, Fun, For, If, Nil, Or,
-    Float, Int, Return, Super, This, True, Var, While,
+    Bool, Float, Int, Return, Super, This, True, Var, While,
 
     Eof
 }

@@ -28,7 +28,7 @@ dotnet run --project src/Fife.Cli                          # start the REPL
 
 ## Language today
 
-- Types: `int`, `float` (represented by C# `double`), strings, booleans, `nil`; `var` declarations are dynamic, while typed declarations are checked
+- Types: `int`, `float` (represented by C# `double`), `bool`, `string`, `nil`; `var` declarations are dynamic, while typed declarations are checked
 - Operators: `+ - * / ^`, `!!` (factorial), `== != < <= > >=`, `!`, `and`, `or`; `+` concatenates when either side is a string
 - Statements: `var`, blocks, `if`/`else`, `while`, `for`, `return`; statements end at a newline, and `\\` continues onto the next line. Semicolons are only used to separate clauses in `for` headers.
 - Functions: `fun` declarations with closures and recursion
@@ -42,6 +42,11 @@ writeln(count)
 
 float ratio = 1.5
 writeln(ratio)
+
+bool ready = true
+string name = "fife"
+writeln(ready)
+writeln(name)
 ```
 
 ```fife

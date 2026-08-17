@@ -48,6 +48,16 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansBoolAndStringKeywords()
+    {
+        var tokens = Scan("bool ready\nstring name");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Bool, TokenType.Identifier, TokenType.NewLine, TokenType.StringType, TokenType.Identifier, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void ScansExponentAndFactorialOperators()
     {
         var tokens = Scan("2^3 6!!");

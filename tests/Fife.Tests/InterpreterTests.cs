@@ -33,6 +33,26 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void SupportsBoolAndStringDeclarationsAndAssignments()
+    {
+        Assert.AreEqual("false\ntrue\n\nhello", Run(
+            "bool ready\nwriteln(ready)\nready = true\nwriteln(ready)\nstring name\nwriteln(name)\nname = \"hello\"\nwriteln(name)\n"));
+    }
+
+    [TestMethod]
+    public void RejectsValuesWithTheWrongDeclaredType()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        engine.Run("bool ready = 1\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Bool variables require a boolean value.");
+    }
+
+    [TestMethod]
     public void RejectsNonNumericFloatValues()
     {
         StringWriter output = new();

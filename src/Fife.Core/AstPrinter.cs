@@ -47,8 +47,10 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     private static string TypeName(FifeType type) => type switch
     {
+        FifeType.Bool => "bool",
         FifeType.Int => "int",
         FifeType.Float => "float",
+        FifeType.String => "string",
         _ => "var"
     };
 

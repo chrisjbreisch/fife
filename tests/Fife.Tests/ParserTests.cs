@@ -66,6 +66,13 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesBoolAndStringDeclarations()
+    {
+        Assert.AreEqual("(bool ready true)", Print("bool ready = true\n"));
+        Assert.AreEqual("(string name hi)", Print("string name = \"hi\"\n"));
+    }
+
+    [TestMethod]
     public void RejectsSemicolonAsStatementTerminator()
     {
         ConsoleErrorReporter errors = new(new StringWriter());

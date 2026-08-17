@@ -5,6 +5,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
     private static readonly Dictionary<string, TokenType> Keywords = new()
     {
         ["and"] = TokenType.And,
+        ["bool"] = TokenType.Bool,
         ["class"] = TokenType.Class,
         ["else"] = TokenType.Else,
         ["false"] = TokenType.False,
@@ -17,6 +18,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
         ["or"] = TokenType.Or,
         ["return"] = TokenType.Return,
         ["super"] = TokenType.Super,
+        ["string"] = TokenType.StringType,
         ["this"] = TokenType.This,
         ["true"] = TokenType.True,
         ["var"] = TokenType.Var,

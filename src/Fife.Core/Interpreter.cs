@@ -139,6 +139,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
         var value = stmt.Initializer is null && stmt.Type is FifeType.Int or FifeType.Float
             ? 0d
+            : stmt.Initializer is null && stmt.Type == FifeType.Bool
+                ? false
+                : stmt.Initializer is null && stmt.Type == FifeType.String
+                    ? ""
             : stmt.Initializer is null ? null : Evaluate(stmt.Initializer);
         if (stmt.Type == FifeType.Int && (value is not double number || number != Math.Truncate(number)))
         {
@@ -148,6 +152,16 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         if (stmt.Type == FifeType.Float && value is not double)
         {
             throw new RuntimeError(stmt.Name, "Float variables require a number value.");
+        }
+
+        if (stmt.Type == FifeType.Bool && value is not bool)
+        {
+            throw new RuntimeError(stmt.Name, "Bool variables require a boolean value.");
+        }
+
+        if (stmt.Type == FifeType.String && value is not string)
+        {
+            throw new RuntimeError(stmt.Name, "String variables require a string value.");
         }
 
         _environment.Define(stmt.Name.Lexeme, value, stmt.Type);

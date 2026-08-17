@@ -43,6 +43,16 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
                     throw new RuntimeError(name, "Float variables require a number value.");
                 }
 
+                if (binding.Type == FifeType.Bool && value is not bool)
+                {
+                    throw new RuntimeError(name, "Bool variables require a boolean value.");
+                }
+
+                if (binding.Type == FifeType.String && value is not string)
+                {
+                    throw new RuntimeError(name, "String variables require a string value.");
+                }
+
                 binding.Value = value;
                 return;
             }

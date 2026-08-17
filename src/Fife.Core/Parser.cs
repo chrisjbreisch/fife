@@ -71,6 +71,8 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             if (Match(TokenType.Var)) return VarDeclaration();
             if (Match(TokenType.Int)) return VarDeclaration(isInt: true);
             if (Match(TokenType.Float)) return VarDeclaration(type: FifeType.Float);
+            if (Match(TokenType.Bool)) return VarDeclaration(type: FifeType.Bool);
+            if (Match(TokenType.StringType)) return VarDeclaration(type: FifeType.String);
             return Statement();
         }
         catch (ParseError)
@@ -146,6 +148,16 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         else if (Match(TokenType.Float))
         {
             initializer = VarDeclaration(type: FifeType.Float, hasStatementTerminator: false);
+            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
+        }
+        else if (Match(TokenType.Bool))
+        {
+            initializer = VarDeclaration(type: FifeType.Bool, hasStatementTerminator: false);
+            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
+        }
+        else if (Match(TokenType.StringType))
+        {
+            initializer = VarDeclaration(type: FifeType.String, hasStatementTerminator: false);
             Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
         }
         else
@@ -478,7 +490,9 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
                 case TokenType.For:
                 case TokenType.If:
                 case TokenType.Float:
+                case TokenType.Bool:
                 case TokenType.Int:
+                case TokenType.StringType:
                 case TokenType.While:
                 case TokenType.Return:
                     return;
