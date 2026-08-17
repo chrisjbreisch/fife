@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>Renders an AST as parenthesized S-expressions. Handy for debugging the parser.</summary>
 public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
@@ -52,7 +52,7 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
     {
         StringBuilder builder = new();
         builder.Append('(').Append(name);
-        foreach (Expr expr in exprs)
+        foreach (var expr in exprs)
         {
             builder.Append(' ').Append(expr.Accept(this));
         }

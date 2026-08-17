@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>A lexical scope: a chain of name-to-value bindings.</summary>
 public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
@@ -11,9 +11,9 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
 
     public object? Get(Token name)
     {
-        for (FifeEnvironment? env = this; env is not null; env = env.Enclosing)
+        for (var env = this; env is not null; env = env.Enclosing)
         {
-            if (env._values.TryGetValue(name.Lexeme, out object? value)) return value;
+            if (env._values.TryGetValue(name.Lexeme, out var value)) return value;
         }
 
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
@@ -21,7 +21,7 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
 
     public void Assign(Token name, object? value)
     {
-        for (FifeEnvironment? env = this; env is not null; env = env.Enclosing)
+        for (var env = this; env is not null; env = env.Enclosing)
         {
             if (env._values.ContainsKey(name.Lexeme))
             {

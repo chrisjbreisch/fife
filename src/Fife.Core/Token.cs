@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 public sealed class Token(TokenType type, string lexeme, object? literal, int line, int column)
 {

@@ -1,14 +1,15 @@
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>Tree-walking evaluator for fife.</summary>
 public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
     private readonly IErrorReporter _errors;
 
-    public Interpreter(IErrorReporter errors, TextWriter? output = null)
+    public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
     {
         _errors = errors;
         Output = output ?? Console.Out;
+        Input = input ?? Console.In;
         Globals = new FifeEnvironment();
         _environment = Globals;
         DefineStandardLibrary();
@@ -20,11 +21,13 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public TextWriter Output { get; }
 
+    public TextReader Input { get; }
+
     public void Interpret(List<Stmt> statements)
     {
         try
         {
-            foreach (Stmt statement in statements)
+            foreach (var statement in statements)
             {
                 Execute(statement);
             }
@@ -40,11 +43,11 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public void ExecuteBlock(List<Stmt> statements, FifeEnvironment environment)
     {
-        FifeEnvironment previous = _environment;
+        var previous = _environment;
         try
         {
             _environment = environment;
-            foreach (Stmt statement in statements)
+            foreach (var statement in statements)
             {
                 Execute(statement);
             }
@@ -57,11 +60,40 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     /// <summary>Registers a host function that fife code can call by name.</summary>
     public void DefineNative(string name, int arity, Func<Interpreter, List<object?>, object?> body) =>
-        Globals.Define(name, new NativeFunction(name, arity, body));
+        Globals.Define(name, new NativeFunction(name, arity, arity, body));
+
+    public void DefineNative(string name, int minArity, int maxArity, Func<Interpreter, List<object?>, object?> body) =>
+        Globals.Define(name, new NativeFunction(name, minArity, maxArity, body));
 
     private void DefineStandardLibrary()
     {
         DefineNative("clock", 0, (_, _) => (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0);
+        DefineNative("read", 0, 1, (interpreter, arguments) =>
+        {
+            WritePrompt(interpreter, arguments);
+            return interpreter.Input.Read();
+        });
+        DefineNative("readln", 0, 1, (interpreter, arguments) =>
+        {
+            WritePrompt(interpreter, arguments);
+            return interpreter.Input.ReadLine();
+        });
+        DefineNative("write", 0, 1, (interpreter, arguments) =>
+        {
+            if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
+            return null;
+        });
+        DefineNative("writeln", 0, 1, (interpreter, arguments) =>
+        {
+            if (arguments.Count == 1) interpreter.Output.WriteLine(Stringify(arguments[0]));
+            else interpreter.Output.WriteLine();
+            return null;
+        });
+    }
+
+    private static void WritePrompt(Interpreter interpreter, List<object?> arguments)
+    {
+        if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
     }
 
     private void Execute(Stmt statement) => statement.Accept(this);
@@ -129,15 +161,15 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitAssignExpr(Expr.Assign expr)
     {
-        object? value = Evaluate(expr.Value);
+        var value = Evaluate(expr.Value);
         _environment.Assign(expr.Name, value);
         return value;
     }
 
     public object? VisitBinaryExpr(Expr.Binary expr)
     {
-        object? left = Evaluate(expr.Left);
-        object? right = Evaluate(expr.Right);
+        var left = Evaluate(expr.Left);
+        var right = Evaluate(expr.Right);
 
         switch (expr.Operator.Type)
         {
@@ -166,6 +198,9 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             case TokenType.Star:
                 CheckNumberOperands(expr.Operator, left, right);
                 return (double)left! * (double)right!;
+            case TokenType.Caret:
+                CheckNumberOperands(expr.Operator, left, right);
+                return Math.Pow((double)left!, (double)right!);
 
             case TokenType.Plus:
                 if (left is double dl && right is double dr) return dl + dr;
@@ -178,10 +213,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitCallExpr(Expr.Call expr)
     {
-        object? callee = Evaluate(expr.Callee);
+        var callee = Evaluate(expr.Callee);
 
         List<object?> arguments = [];
-        foreach (Expr argument in expr.Arguments)
+        foreach (var argument in expr.Arguments)
         {
             arguments.Add(Evaluate(argument));
         }
@@ -191,9 +226,12 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             throw new RuntimeError(expr.Paren, "Can only call functions and classes.");
         }
 
-        if (arguments.Count != callable.Arity)
+        if (arguments.Count < callable.Arity || arguments.Count > callable.MaxArity)
         {
-            throw new RuntimeError(expr.Paren, $"Expected {callable.Arity} arguments but got {arguments.Count}.");
+            var expected = callable.Arity == callable.MaxArity
+                ? callable.Arity.ToString()
+                : $"between {callable.Arity} and {callable.MaxArity}";
+            throw new RuntimeError(expr.Paren, $"Expected {expected} arguments but got {arguments.Count}.");
         }
 
         return callable.Call(this, arguments);
@@ -205,7 +243,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitLogicalExpr(Expr.Logical expr)
     {
-        object? left = Evaluate(expr.Left);
+        var left = Evaluate(expr.Left);
 
         if (expr.Operator.Type == TokenType.Or)
         {
@@ -221,7 +259,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitUnaryExpr(Expr.Unary expr)
     {
-        object? right = Evaluate(expr.Right);
+        var right = Evaluate(expr.Right);
 
         switch (expr.Operator.Type)
         {
@@ -230,6 +268,8 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             case TokenType.Minus:
                 CheckNumberOperand(expr.Operator, right);
                 return -(double)right!;
+            case TokenType.BangBang:
+                return Factorial(expr.Operator, right);
         }
 
         return null;
@@ -259,7 +299,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
                 return b ? "true" : "false";
             case double d:
             {
-                string text = d.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+                var text = d.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
                 return text.EndsWith(".0", StringComparison.Ordinal) ? text[..^2] : text;
             }
             default:
@@ -277,5 +317,21 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
         if (left is double && right is double) return;
         throw new RuntimeError(op, "Operands must be numbers.");
+    }
+
+    private static double Factorial(Token op, object? operand)
+    {
+        if (operand is not double value || value < 0 || value != Math.Truncate(value))
+        {
+            throw new RuntimeError(op, "Operand must be a non-negative integer.");
+        }
+
+        var result = 1d;
+        for (var factor = 2d; factor <= value; factor++)
+        {
+            result *= factor;
+        }
+
+        return result;
     }
 }

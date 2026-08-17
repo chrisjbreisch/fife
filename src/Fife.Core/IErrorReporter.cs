@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>Sink for compile-time and run-time diagnostics produced by the interpreter pipeline.</summary>
 public interface IErrorReporter

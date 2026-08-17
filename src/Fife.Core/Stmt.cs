@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 public abstract class Stmt
 {

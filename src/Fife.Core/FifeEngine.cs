@@ -1,15 +1,16 @@
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>Front end that wires the scanner, parser and interpreter together.</summary>
 public sealed class FifeEngine
 {
     private readonly IErrorReporter _errors;
     private readonly Interpreter _interpreter;
+    private string _replSource = "";
 
-    public FifeEngine(IErrorReporter? errors = null, TextWriter? output = null)
+    public FifeEngine(IErrorReporter? errors = null, TextWriter? output = null, TextReader? input = null)
     {
         _errors = errors ?? new ConsoleErrorReporter();
-        _interpreter = new Interpreter(_errors, output);
+        _interpreter = new Interpreter(_errors, output, input);
     }
 
     public Interpreter Interpreter => _interpreter;
@@ -22,8 +23,8 @@ public sealed class FifeEngine
 
     public void Run(string source)
     {
-        List<Token> tokens = new Scanner(source, _errors).ScanTokens();
-        List<Stmt> statements = new Parser(tokens, _errors).Parse();
+        var tokens = new Scanner(source, _errors).ScanTokens();
+        var statements = new Parser(tokens, _errors).Parse();
 
         if (_errors.HadError) return;
 
@@ -36,31 +37,54 @@ public sealed class FifeEngine
     /// </summary>
     public object? RunRepl(string source)
     {
-        List<Token> tokens = new Scanner(source, _errors).ScanTokens();
-        if (_errors.HadError) return null;
+        _replSource += source.EndsWith('\n') ? source : source + "\n";
+        var replSource = _replSource;
+        var tokens = new Scanner(replSource, _errors).ScanTokens();
+        if (_errors.HadError)
+        {
+            _replSource = "";
+            return null;
+        }
 
-        if (!source.TrimEnd().EndsWith(';') && !source.TrimEnd().EndsWith('}'))
+        var blockDepth = 0;
+        foreach (var token in tokens)
+        {
+            if (token.Type == TokenType.LeftBrace) blockDepth++;
+            else if (token.Type == TokenType.RightBrace) blockDepth--;
+        }
+
+        if (blockDepth > 0) return null;
+
+        if (!replSource.TrimEnd().EndsWith('}'))
         {
             IErrorReporter probe = new SilentErrorReporter();
-            Expr? expr = new Parser(tokens, probe).ParseExpression();
+            var expr = new Parser(tokens, probe).ParseExpression();
             if (expr is not null && !probe.HadError)
             {
                 try
                 {
-                    return _interpreter.Evaluate(expr);
+                    var value = _interpreter.Evaluate(expr);
+                    _replSource = "";
+                    return value;
                 }
                 catch (RuntimeError error)
                 {
                     _errors.RuntimeError(error);
+                    _replSource = "";
                     return null;
                 }
             }
         }
 
-        List<Stmt> statements = new Parser(tokens, _errors).Parse();
-        if (_errors.HadError) return null;
+        var statements = new Parser(tokens, _errors).Parse();
+        if (_errors.HadError)
+        {
+            _replSource = "";
+            return null;
+        }
 
         _interpreter.Interpret(statements);
+        _replSource = "";
         return null;
     }
 }

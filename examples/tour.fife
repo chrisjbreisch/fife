@@ -1,48 +1,49 @@
 // A quick tour of what fife can do today.
 
-print "hello from fife";
+print "hello from fife"
 
-var greeting = "hi";
-var name = "world";
-print greeting + ", " + name + "!";
+var greeting = "hi"
+var name = "world"
+print greeting + ", " + name + "!"
 
 // Blocks and scoping.
 {
-  var name = "block";
-  print greeting + ", " + name + "!";
+  var name = "block"
+  print greeting + ", " + name + "!"
 }
 
 // Control flow.
 for (var i = 1; i <= 5; i = i + 1) {
-  if (i < 3) print "small: " + i; else print "big: " + i;
+  if (i < 3) print "small: " + i
+  else print "big: " + i
 }
 
-var n = 3;
+var n = 3
 while (n > 0) {
-  print n;
-  n = n - 1;
+  print n
+  n = n - 1
 }
 
 // Functions and closures.
 fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 1) + fib(n - 2);
+  if (n < 2) return n
+  return fib(n - 1) + fib(n - 2)
 }
 
-for (var i = 0; i < 10; i = i + 1) print fib(i);
+for (var i = 0; i < 10; i = i + 1) print fib(i)
 
 fun makeCounter() {
-  var count = 0;
+  var count = 0
   fun increment() {
-    count = count + 1;
-    return count;
+    count = count + 1
+    return count
   }
-  return increment;
+  return increment
 }
 
-var counter = makeCounter();
-print counter();
-print counter();
+var counter = makeCounter()
+print counter()
+print counter()
 
 // Native functions provided by the host.
-print clock();
+print clock()

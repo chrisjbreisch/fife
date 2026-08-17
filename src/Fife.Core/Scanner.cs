@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 public sealed class Scanner(string source, IErrorReporter errors)
 {
@@ -44,7 +44,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
 
     private void ScanToken()
     {
-        char c = Advance();
+        var c = Advance();
         switch (c)
         {
             case '(': AddToken(TokenType.LeftParen); break;
@@ -57,7 +57,9 @@ public sealed class Scanner(string source, IErrorReporter errors)
             case '+': AddToken(TokenType.Plus); break;
             case ';': AddToken(TokenType.Semicolon); break;
             case '*': AddToken(TokenType.Star); break;
-            case '!': AddToken(Match('=') ? TokenType.BangEqual : TokenType.Bang); break;
+            case '^': AddToken(TokenType.Caret); break;
+            case '!': AddToken(Match('=') ? TokenType.BangEqual : Match('!') ? TokenType.BangBang : TokenType.Bang); break;
+            case '\\': LineContinuation(); break;
             case '=': AddToken(Match('=') ? TokenType.EqualEqual : TokenType.Equal); break;
             case '<': AddToken(Match('=') ? TokenType.LessEqual : TokenType.Less); break;
             case '>': AddToken(Match('=') ? TokenType.GreaterEqual : TokenType.Greater); break;
@@ -83,6 +85,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
                 break;
 
             case '\n':
+                AddToken(TokenType.NewLine);
                 NewLine();
                 break;
 
@@ -107,7 +110,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
 
     private void BlockComment()
     {
-        int depth = 1;
+        var depth = 1;
         while (depth > 0 && !IsAtEnd)
         {
             if (Peek == '/' && PeekNext == '*') { Advance(); Advance(); depth++; }
@@ -117,6 +120,20 @@ public sealed class Scanner(string source, IErrorReporter errors)
         }
 
         if (depth > 0) ErrorAtStart("Unterminated block comment.");
+    }
+
+    private void LineContinuation()
+    {
+        if (Peek == '\r') Advance();
+        if (Peek == '\n')
+        {
+            Advance();
+            NewLine();
+        }
+        else
+        {
+            ErrorAtStart("Expected a newline after line continuation.");
+        }
     }
 
     private void StringLiteral()
@@ -158,7 +175,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
     private void Identifier()
     {
         while (IsAlphaNumeric(Peek)) Advance();
-        AddToken(Keywords.TryGetValue(CurrentLexeme, out TokenType type) ? type : TokenType.Identifier);
+        AddToken(Keywords.TryGetValue(CurrentLexeme, out var type) ? type : TokenType.Identifier);
     }
 
     private string CurrentLexeme => source[_start.._current];

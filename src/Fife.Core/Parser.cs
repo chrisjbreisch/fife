@@ -1,4 +1,4 @@
-namespace Fife;
+namespace Fife.Core;
 
 /// <summary>
 /// Recursive-descent parser.
@@ -13,8 +13,10 @@ namespace Fife;
 /// equality    -> comparison ( ( "!=" | "==" ) comparison )* ;
 /// comparison  -> term ( ( "&gt;" | "&gt;=" | "&lt;" | "&lt;=" ) term )* ;
 /// term        -> factor ( ( "-" | "+" ) factor )* ;
-/// factor      -> unary ( ( "/" | "*" ) unary )* ;
-/// unary       -> ( "!" | "-" ) unary | call ;
+/// factor      -> power ( ( "/" | "*" ) power )* ;
+/// power       -> postfix ( "^" unary )? ;
+/// unary       -> ( "!" | "-" ) unary | power ;
+/// postfix     -> call ( "!!" )* ;
 /// call        -> primary ( "(" arguments? ")" )* ;
 /// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
 /// </summary>
@@ -29,9 +31,11 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     public List<Stmt> Parse()
     {
         List<Stmt> statements = [];
-        while (!IsAtEnd)
+        while (true)
         {
-            Stmt? declaration = Declaration();
+            SkipNewLines();
+            if (IsAtEnd) break;
+            var declaration = Declaration();
             if (declaration is not null) statements.Add(declaration);
         }
 
@@ -43,7 +47,8 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     {
         try
         {
-            Expr expr = Expression();
+            var expr = Expression();
+            SkipNewLines();
             if (!IsAtEnd)
             {
                 Error(Peek, "Expect end of expression.");
@@ -75,7 +80,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Stmt.Function Function(string kind)
     {
-        Token name = Consume(TokenType.Identifier, $"Expect {kind} name.");
+        var name = Consume(TokenType.Identifier, $"Expect {kind} name.");
         Consume(TokenType.LeftParen, $"Expect '(' after {kind} name.");
 
         List<Token> parameters = [];
@@ -98,11 +103,14 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         return new Stmt.Function(name, parameters, Block());
     }
 
-    private Stmt VarDeclaration()
+    private Stmt VarDeclaration(bool hasStatementTerminator = true)
     {
-        Token name = Consume(TokenType.Identifier, "Expect variable name.");
-        Expr? initializer = Match(TokenType.Equal) ? Expression() : null;
-        Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
+        var name = Consume(TokenType.Identifier, "Expect variable name.");
+        var initializer = Match(TokenType.Equal) ? Expression() : null;
+        if (hasStatementTerminator)
+        {
+            ConsumeStatementTerminator("Expect end of variable declaration.");
+        }
         return new Stmt.Var(name, initializer);
     }
 
@@ -124,16 +132,25 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
         Stmt? initializer;
         if (Match(TokenType.Semicolon)) initializer = null;
-        else if (Match(TokenType.Var)) initializer = VarDeclaration();
-        else initializer = ExpressionStatement();
+        else if (Match(TokenType.Var))
+        {
+            initializer = VarDeclaration(false);
+            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
+        }
+        else
+        {
+            var initializerExpression = Expression();
+            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
+            initializer = new Stmt.Expression(initializerExpression);
+        }
 
-        Expr? condition = Check(TokenType.Semicolon) ? null : Expression();
+        var condition = Check(TokenType.Semicolon) ? null : Expression();
         Consume(TokenType.Semicolon, "Expect ';' after loop condition.");
 
-        Expr? increment = Check(TokenType.RightParen) ? null : Expression();
+        var increment = Check(TokenType.RightParen) ? null : Expression();
         Consume(TokenType.RightParen, "Expect ')' after for clauses.");
 
-        Stmt body = Statement();
+        var body = Statement();
 
         if (increment is not null)
         {
@@ -153,41 +170,42 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     private Stmt IfStatement()
     {
         Consume(TokenType.LeftParen, "Expect '(' after 'if'.");
-        Expr condition = Expression();
+        var condition = Expression();
         Consume(TokenType.RightParen, "Expect ')' after if condition.");
 
-        Stmt thenBranch = Statement();
-        Stmt? elseBranch = Match(TokenType.Else) ? Statement() : null;
+        var thenBranch = Statement();
+        SkipNewLines();
+        var elseBranch = Match(TokenType.Else) ? Statement() : null;
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt PrintStatement()
     {
-        Expr value = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        var value = Expression();
+        ConsumeStatementTerminator("Expect end of value.");
         return new Stmt.Print(value);
     }
 
     private Stmt ReturnStatement()
     {
-        Token keyword = Previous;
-        Expr? value = Check(TokenType.Semicolon) ? null : Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after return value.");
+        var keyword = Previous;
+        var value = CheckStatementTerminator() ? null : Expression();
+        ConsumeStatementTerminator("Expect end of return statement.");
         return new Stmt.Return(keyword, value);
     }
 
     private Stmt WhileStatement()
     {
         Consume(TokenType.LeftParen, "Expect '(' after 'while'.");
-        Expr condition = Expression();
+        var condition = Expression();
         Consume(TokenType.RightParen, "Expect ')' after condition.");
         return new Stmt.While(condition, Statement());
     }
 
     private Stmt ExpressionStatement()
     {
-        Expr expr = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after expression.");
+        var expr = Expression();
+        ConsumeStatementTerminator("Expect end of expression.");
         return new Stmt.Expression(expr);
     }
 
@@ -196,7 +214,9 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         List<Stmt> statements = [];
         while (!Check(TokenType.RightBrace) && !IsAtEnd)
         {
-            Stmt? declaration = Declaration();
+            SkipNewLines();
+            if (Check(TokenType.RightBrace)) break;
+            var declaration = Declaration();
             if (declaration is not null) statements.Add(declaration);
         }
 
@@ -208,12 +228,12 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Assignment()
     {
-        Expr expr = Or();
+        var expr = Or();
 
         if (Match(TokenType.Equal))
         {
-            Token equals = Previous;
-            Expr value = Assignment();
+            var equals = Previous;
+            var value = Assignment();
 
             if (expr is Expr.Variable variable)
             {
@@ -228,10 +248,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Or()
     {
-        Expr expr = And();
+        var expr = And();
         while (Match(TokenType.Or))
         {
-            Token op = Previous;
+            var op = Previous;
             expr = new Expr.Logical(expr, op, And());
         }
 
@@ -240,10 +260,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr And()
     {
-        Expr expr = Equality();
+        var expr = Equality();
         while (Match(TokenType.And))
         {
-            Token op = Previous;
+            var op = Previous;
             expr = new Expr.Logical(expr, op, Equality());
         }
 
@@ -252,10 +272,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Equality()
     {
-        Expr expr = Comparison();
+        var expr = Comparison();
         while (Match(TokenType.BangEqual, TokenType.EqualEqual))
         {
-            Token op = Previous;
+            var op = Previous;
             expr = new Expr.Binary(expr, op, Comparison());
         }
 
@@ -264,10 +284,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Comparison()
     {
-        Expr expr = Term();
+        var expr = Term();
         while (Match(TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual))
         {
-            Token op = Previous;
+            var op = Previous;
             expr = new Expr.Binary(expr, op, Term());
         }
 
@@ -276,10 +296,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Term()
     {
-        Expr expr = Factor();
+        var expr = Factor();
         while (Match(TokenType.Minus, TokenType.Plus))
         {
-            Token op = Previous;
+            var op = Previous;
             expr = new Expr.Binary(expr, op, Factor());
         }
 
@@ -288,10 +308,22 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private Expr Factor()
     {
-        Expr expr = Unary();
+        var expr = Unary();
         while (Match(TokenType.Slash, TokenType.Star))
         {
-            Token op = Previous;
+            var op = Previous;
+            expr = new Expr.Binary(expr, op, Unary());
+        }
+
+        return expr;
+    }
+
+    private Expr Power()
+    {
+        var expr = Postfix();
+        if (Match(TokenType.Caret))
+        {
+            var op = Previous;
             expr = new Expr.Binary(expr, op, Unary());
         }
 
@@ -302,16 +334,27 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     {
         if (Match(TokenType.Bang, TokenType.Minus))
         {
-            Token op = Previous;
+            var op = Previous;
             return new Expr.Unary(op, Unary());
         }
 
-        return Call();
+        return Power();
+    }
+
+    private Expr Postfix()
+    {
+        var expr = Call();
+        while (Match(TokenType.BangBang))
+        {
+            expr = new Expr.Unary(Previous, expr);
+        }
+
+        return expr;
     }
 
     private Expr Call()
     {
-        Expr expr = Primary();
+        var expr = Primary();
         while (Match(TokenType.LeftParen))
         {
             expr = FinishCall(expr);
@@ -331,13 +374,14 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
                 {
                     Error(Peek, $"Can't have more than {MaxArguments} arguments.");
                 }
+                SkipNewLines();
 
                 arguments.Add(Expression());
             }
             while (Match(TokenType.Comma));
         }
 
-        Token paren = Consume(TokenType.RightParen, "Expect ')' after arguments.");
+        var paren = Consume(TokenType.RightParen, "Expect ')' after arguments.");
         return new Expr.Call(callee, paren, arguments);
     }
 
@@ -351,7 +395,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
         if (Match(TokenType.LeftParen))
         {
-            Expr expr = Expression();
+            var expr = Expression();
             Consume(TokenType.RightParen, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
@@ -361,7 +405,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
     private bool Match(params TokenType[] types)
     {
-        foreach (TokenType type in types)
+        foreach (var type in types)
         {
             if (Check(type))
             {
@@ -380,6 +424,23 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     }
 
     private bool Check(TokenType type) => !IsAtEnd && Peek.Type == type;
+
+    private bool CheckStatementTerminator() => Check(TokenType.NewLine);
+
+    private void ConsumeStatementTerminator(string message)
+    {
+        if (!Match(TokenType.NewLine))
+        {
+            throw Error(Peek, message);
+        }
+
+        SkipNewLines();
+    }
+
+    private void SkipNewLines()
+    {
+        while (Match(TokenType.NewLine)) { }
+    }
 
     private Token Advance() => IsAtEnd ? Previous : tokens[_current++];
 
@@ -403,6 +464,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         while (!IsAtEnd)
         {
             if (Previous.Type == TokenType.Semicolon) return;
+            if (Previous.Type == TokenType.NewLine) return;
 
             switch (Peek.Type)
             {

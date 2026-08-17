@@ -29,26 +29,30 @@ dotnet run --project src/Fife.Cli                          # start the REPL
 ## Language today
 
 - Types: numbers (double), strings, booleans, `nil`
-- Operators: `+ - * /`, `== != < <= > >=`, `!`, `and`, `or`; `+` concatenates when either side is a string
-- Statements: `var`, `print`, blocks, `if`/`else`, `while`, `for`, `return`
+- Operators: `+ - * / ^`, `!!` (factorial), `== != < <= > >=`, `!`, `and`, `or`; `+` concatenates when either side is a string
+- Statements: `var`, `print`, blocks, `if`/`else`, `while`, `for`, `return`; statements end at a newline, and `\\` continues onto the next line. Semicolons are only used to separate clauses in `for` headers.
 - Functions: `fun` declarations with closures and recursion
 - Comments: `//` line comments and nestable `/* ... */` block comments
-- Natives: `clock()`
+- Standard library: `clock()`, `read()` / `read(prompt)`, `readln()` / `readln(prompt)`, `write()` / `write(value)`, and `writeln()` / `writeln(value)`
 
 ```fife
 fun makeCounter() {
-  var count = 0;
+  var count = 0
   fun increment() {
-    count = count + 1;
-    return count;
+    count = count + 1
+    return count
   }
-  return increment;
+  return increment
 }
 
-var counter = makeCounter();
-print counter(); // 1
-print counter(); // 2
+var counter = makeCounter()
+print counter() // 1
+print counter() // 2
 ```
+
+`read` reads one character and returns its numeric character code. `readln` reads a complete
+line. When given one argument, either function writes it as a prompt first. `write` and `writeln`
+optionally write one value; `writeln()` writes just a newline.
 
 ## Extending it
 

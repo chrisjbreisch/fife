@@ -1,3 +1,5 @@
+using Fife.Core;
+
 namespace Fife.Tests;
 
 [TestClass]
@@ -12,7 +14,7 @@ public sealed class ScannerTests
     [TestMethod]
     public void ScansOperatorsAndLiterals()
     {
-        List<Token> tokens = Scan("var x = 12.5 >= 3;");
+        var tokens = Scan("var x = 12.5 >= 3;");
 
         CollectionAssert.AreEqual(
             new[]
@@ -26,22 +28,42 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansExponentAndFactorialOperators()
+    {
+        var tokens = Scan("2^3 6!!");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Number, TokenType.Caret, TokenType.Number, TokenType.Number, TokenType.BangBang, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
+    public void ScansNewlinesAndSkipsEscapedNewlines()
+    {
+        var tokens = Scan("1\n2 + \\\n3");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Number, TokenType.NewLine, TokenType.Number, TokenType.Plus, TokenType.Number, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void SkipsLineAndBlockComments()
     {
-        List<Token> tokens = Scan("// gone\n/* also /* nested */ gone */ 42");
+        var tokens = Scan("// gone\n/* also /* nested */ gone */ 42");
 
-        Assert.AreEqual(TokenType.Number, tokens[0].Type);
-        Assert.AreEqual(42d, tokens[0].Literal);
+        Assert.AreEqual(TokenType.Number, tokens[1].Type);
+        Assert.AreEqual(42d, tokens[1].Literal);
     }
 
     [TestMethod]
     public void TracksLineNumbers()
     {
-        List<Token> tokens = Scan("1\n2\n3");
+        var tokens = Scan("1\n2\n3");
 
         Assert.AreEqual(1, tokens[0].Line);
-        Assert.AreEqual(2, tokens[1].Line);
-        Assert.AreEqual(3, tokens[2].Line);
+        Assert.AreEqual(2, tokens[2].Line);
+        Assert.AreEqual(3, tokens[4].Line);
     }
 
     [TestMethod]
