@@ -5,6 +5,10 @@ namespace Fife.Core;
 ///
 /// program     -> declaration* EOF
 /// declaration -> funDecl | varDecl | statement
+/// funDecl     -> type? "fun" IDENTIFIER "(" parameters? ")" block
+/// varDecl     -> type IDENTIFIER ( "=" expression )? terminator
+/// parameters  -> type? IDENTIFIER ( "," type? IDENTIFIER )*
+/// type        -> "var" | "bool" | "int" | "float" | "string"
 /// statement   -> exprStmt | forStmt | ifStmt | returnStmt | whileStmt | block
 /// expression  -> assignment
 /// assignment  -> IDENTIFIER "=" assignment | logic_or
@@ -23,6 +27,15 @@ namespace Fife.Core;
 public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 {
     private const int MaxArguments = 255;
+
+    private static readonly Dictionary<TokenType, FifeType> DeclarationTypes = new()
+    {
+        [TokenType.Var] = FifeType.Dynamic,
+        [TokenType.Bool] = FifeType.Bool,
+        [TokenType.Int] = FifeType.Int,
+        [TokenType.Float] = FifeType.Float,
+        [TokenType.StringType] = FifeType.String,
+    };
 
     private sealed class ParseError : Exception;
 
@@ -67,12 +80,12 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     {
         try
         {
-            if (Match(TokenType.Fun)) return Function("function");
-            if (Match(TokenType.Var)) return VarDeclaration();
-            if (Match(TokenType.Int)) return VarDeclaration(type: FifeType.Int);
-            if (Match(TokenType.Float)) return VarDeclaration(type: FifeType.Float);
-            if (Match(TokenType.Bool)) return VarDeclaration(type: FifeType.Bool);
-            if (Match(TokenType.StringType)) return VarDeclaration(type: FifeType.String);
+            if (Match(TokenType.Fun)) return Function("function", FifeType.Dynamic);
+            if (MatchDeclarationType(out var type))
+            {
+                return Match(TokenType.Fun) ? Function("function", type) : VarDeclaration(type: type);
+            }
+
             return Statement();
         }
         catch (ParseError)
@@ -82,12 +95,12 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         }
     }
 
-    private Stmt.Function Function(string kind)
+    private Stmt.Function Function(string kind, FifeType returnType)
     {
         var name = Consume(TokenType.Identifier, $"Expect {kind} name.");
         Consume(TokenType.LeftParen, $"Expect '(' after {kind} name.");
 
-        List<Token> parameters = [];
+        List<Stmt.Parameter> parameters = [];
         if (!Check(TokenType.RightParen))
         {
             do
@@ -97,14 +110,16 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
                     Error(Peek, $"Can't have more than {MaxArguments} parameters.");
                 }
 
-                parameters.Add(Consume(TokenType.Identifier, "Expect parameter name."));
+                MatchDeclarationType(out var parameterType);
+                var parameterName = Consume(TokenType.Identifier, "Expect parameter name.");
+                parameters.Add(new Stmt.Parameter(parameterName, parameterType));
             }
             while (Match(TokenType.Comma));
         }
 
         Consume(TokenType.RightParen, "Expect ')' after parameters.");
         Consume(TokenType.LeftBrace, $"Expect '{{' before {kind} body.");
-        return new Stmt.Function(name, parameters, Block());
+        return new Stmt.Function(name, parameters, Block(), returnType);
     }
 
     private Stmt VarDeclaration(bool hasStatementTerminator = true, FifeType type = FifeType.Dynamic)
@@ -135,29 +150,9 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
         Stmt? initializer;
         if (Match(TokenType.Semicolon)) initializer = null;
-        else if (Match(TokenType.Var))
+        else if (MatchDeclarationType(out var initializerType))
         {
-            initializer = VarDeclaration(false);
-            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
-        }
-        else if (Match(TokenType.Int))
-        {
-            initializer = VarDeclaration(type: FifeType.Int, hasStatementTerminator: false);
-            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
-        }
-        else if (Match(TokenType.Float))
-        {
-            initializer = VarDeclaration(type: FifeType.Float, hasStatementTerminator: false);
-            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
-        }
-        else if (Match(TokenType.Bool))
-        {
-            initializer = VarDeclaration(type: FifeType.Bool, hasStatementTerminator: false);
-            Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
-        }
-        else if (Match(TokenType.StringType))
-        {
-            initializer = VarDeclaration(type: FifeType.String, hasStatementTerminator: false);
+            initializer = VarDeclaration(type: initializerType, hasStatementTerminator: false);
             Consume(TokenType.Semicolon, "Expect ';' after for initializer.");
         }
         else
@@ -430,6 +425,18 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             }
         }
 
+        return false;
+    }
+
+    private bool MatchDeclarationType(out FifeType type)
+    {
+        if (!IsAtEnd && DeclarationTypes.TryGetValue(Peek.Type, out type))
+        {
+            Advance();
+            return true;
+        }
+
+        type = FifeType.Dynamic;
         return false;
     }
 

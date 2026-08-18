@@ -77,8 +77,39 @@ The former `print` statement is not part of the language. Use `writeln(...)` or 
 
 ## Functions
 
-Functions are declared with `fun`. They support parameters, return values, closures, and
-recursion:
+Functions are declared with `fun`. A function may state a return type before `fun`, and each
+parameter may state its own type. Every annotation is optional:
+
+```fife
+int fun add(int a, int b) {
+  return a + b
+}
+
+writeln(add(1, 2)) // 3
+```
+
+An annotation may be any of `var`, `int`, `float`, `bool`, or `string`. Omitting an annotation is
+the same as writing `var`, so these two declarations are equivalent:
+
+```fife
+fun describe(value) {
+  return "value: " + value
+}
+
+var fun describe(var value) {
+  return "value: " + value
+}
+```
+
+Annotations can be mixed, so you can type only the parts that matter:
+
+```fife
+int fun sum(int count, values) {
+  return count
+}
+```
+
+Functions support closures and recursion:
 
 ```fife
 fun makeCounter() {

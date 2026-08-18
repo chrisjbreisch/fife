@@ -30,7 +30,7 @@ public sealed class FifeFunction(Stmt.Function declaration, FifeEnvironment clos
         FifeEnvironment environment = new(closure);
         for (var i = 0; i < declaration.Parameters.Count; i++)
         {
-            environment.Define(declaration.Parameters[i].Lexeme, arguments[i]);
+            environment.Define(declaration.Parameters[i].Name.Lexeme, arguments[i]);
         }
 
         try

@@ -31,7 +31,7 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
     public string VisitExpressionStmt(Stmt.Expression stmt) => Parenthesize(";", stmt.Expr);
 
     public string VisitFunctionStmt(Stmt.Function stmt) =>
-        $"(fun {stmt.Name.Lexeme}({string.Join(' ', stmt.Parameters.Select(p => p.Lexeme))}) {Print(stmt.Body)})";
+        $"({FifeTypes.Name(stmt.ReturnType)} fun {stmt.Name.Lexeme}({string.Join(' ', stmt.Parameters.Select(p => $"{FifeTypes.Name(p.Type)} {p.Name.Lexeme}"))}) {Print(stmt.Body)})";
 
     public string VisitIfStmt(Stmt.If stmt) => stmt.ElseBranch is null
         ? $"(if {Print(stmt.Condition)} {stmt.ThenBranch.Accept(this)})"

@@ -176,7 +176,7 @@ public sealed class InterpreterTests
     [TestMethod]
     public void CallsFunctionsAndReturnsValues()
     {
-        Assert.AreEqual("3", Run("fun add(a, b) { return a + b\n}\nwriteln(add(1, 2))\n"));
+        Assert.AreEqual("3", Run("int fun add(int a, int b) { return a + b\n}\nwriteln(add(1, 2))\n"));
     }
 
     [TestMethod]

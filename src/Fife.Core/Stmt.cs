@@ -27,11 +27,18 @@ public abstract class Stmt
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitExpressionStmt(this);
     }
 
-    public sealed class Function(Token name, List<Token> parameters, List<Stmt> body) : Stmt
+    public sealed class Parameter(Token name, FifeType type)
     {
         public Token Name { get; } = name;
-        public List<Token> Parameters { get; } = parameters;
+        public FifeType Type { get; } = type;
+    }
+
+    public sealed class Function(Token name, List<Parameter> parameters, List<Stmt> body, FifeType returnType) : Stmt
+    {
+        public Token Name { get; } = name;
+        public List<Parameter> Parameters { get; } = parameters;
         public List<Stmt> Body { get; } = body;
+        public FifeType ReturnType { get; } = returnType;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitFunctionStmt(this);
     }
 

@@ -59,6 +59,26 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesTypedFunctionDeclarations()
+    {
+        Assert.AreEqual(
+            "(int fun add(int a int b) (return (+ a b)))",
+            Print("int fun add(int a, int b) {\nreturn a + b\n}\n"));
+        Assert.AreEqual("(var fun noop() )", Print("var fun noop() {\n}\n"));
+    }
+
+    [TestMethod]
+    public void ParsesFunctionDeclarationsWithoutTypes()
+    {
+        Assert.AreEqual(
+            "(var fun add(var a var b) (return (+ a b)))",
+            Print("fun add(a, b) {\nreturn a + b\n}\n"));
+        Assert.AreEqual(
+            "(int fun add(var a int b) (return (+ a b)))",
+            Print("int fun add(a, int b) {\nreturn a + b\n}\n"));
+    }
+
+    [TestMethod]
     public void ParsesFloatDeclarations()
     {
         Assert.AreEqual("(float x 1.5)", Print("float x = 1.5\n"));
