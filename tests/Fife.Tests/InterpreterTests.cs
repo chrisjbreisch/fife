@@ -187,6 +187,37 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void RejectsArgumentsThatDoNotMatchParameterTypes()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("fun double(int n) { return n\n}\ndouble(1.5)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Parameter 'n' requires an integer value.");
+    }
+
+    [TestMethod]
+    public void RejectsReturnValuesThatDoNotMatchTheReturnType()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("string fun name() { return 1\n}\nname()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Function 'name' must return a string value.");
+    }
+
+    [TestMethod]
+    public void AllowsUnannotatedFunctionsToUseAnyValue()
+    {
+        Assert.AreEqual("1.5\nfife", Run(
+            "fun echo(value) { return value\n}\nwriteln(echo(1.5))\nwriteln(echo(\"fife\"))\n"));
+    }
+
+    [TestMethod]
     public void ReportsRuntimeErrorForBadOperand()
     {
         StringWriter output = new();

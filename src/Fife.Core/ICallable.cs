@@ -30,19 +30,35 @@ public sealed class FifeFunction(Stmt.Function declaration, FifeEnvironment clos
         FifeEnvironment environment = new(closure);
         for (var i = 0; i < declaration.Parameters.Count; i++)
         {
-            environment.Define(declaration.Parameters[i].Name.Lexeme, arguments[i]);
+            var parameter = declaration.Parameters[i];
+            if (!FifeTypes.Accepts(parameter.Type, arguments[i]))
+            {
+                throw new RuntimeError(
+                    parameter.Name,
+                    $"Parameter '{parameter.Name.Lexeme}' requires {FifeTypes.ValueDescription(parameter.Type)}.");
+            }
+
+            environment.Define(parameter.Name.Lexeme, arguments[i], parameter.Type);
         }
 
+        object? result = null;
         try
         {
             interpreter.ExecuteBlock(declaration.Body, environment);
         }
         catch (ReturnException returnValue)
         {
-            return returnValue.Value;
+            result = returnValue.Value;
         }
 
-        return null;
+        if (!FifeTypes.Accepts(declaration.ReturnType, result))
+        {
+            throw new RuntimeError(
+                declaration.Name,
+                $"Function '{declaration.Name.Lexeme}' must return {FifeTypes.ValueDescription(declaration.ReturnType)}.");
+        }
+
+        return result;
     }
 
     public override string ToString() => $"<fn {declaration.Name.Lexeme}>";

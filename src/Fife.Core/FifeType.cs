@@ -46,4 +46,13 @@ public static class FifeTypes
         FifeType.String => "String variables require a string value.",
         _ => "Variable value does not match its declared type."
     };
+
+    public static string ValueDescription(FifeType type) => type switch
+    {
+        FifeType.Bool => "a boolean value",
+        FifeType.Int => "an integer value",
+        FifeType.Float => "a number value",
+        FifeType.String => "a string value",
+        _ => "a value"
+    };
 }

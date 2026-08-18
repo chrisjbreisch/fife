@@ -109,6 +109,21 @@ int fun sum(int count, values) {
 }
 ```
 
+Annotations are checked while the program runs. An argument must match its parameter's type, and
+a returned value must match the declared return type:
+
+```fife
+int fun double(int n) {
+  return n * 2
+}
+
+double(1.5) // Error: Parameter 'n' requires an integer value.
+```
+
+A typed parameter behaves like a typed variable inside the body, so assigning it a value of
+another type is also an error. A function with a return type other than `var` must return a
+matching value; reaching the end of the body without doing so is an error.
+
 Functions support closures and recursion:
 
 ```fife
