@@ -172,6 +172,70 @@ writeln(counter()) // 1
 writeln(counter()) // 2
 ```
 
+## Classes
+
+A class is declared with `class`. Its body holds methods, which are written like functions but
+without the `fun` keyword:
+
+```fife
+class Greeter {
+  greet() {
+    writeln("hi")
+  }
+}
+
+var g = Greeter()
+g.greet()
+```
+
+Calling the class creates an instance. A method whose name matches the class name is its
+constructor, and it runs on every instantiation:
+
+```fife
+class Greeter {
+  Greeter(name) {
+    this.name = name
+  }
+
+  greet() {
+    writeln("hi, " + this.name)
+  }
+}
+
+Greeter("world").greet() // hi, world
+```
+
+Inside a method, `this` refers to the instance the method was called on. A method keeps its
+instance even when it is stored in a variable and called later.
+
+Fields are created by assigning to them and may be read or written from outside the class:
+
+```fife
+var g = Greeter("world")
+g.name = "fife"
+writeln(g.name)
+```
+
+A field shadows a method of the same name. Methods take type annotations exactly as functions do:
+
+```fife
+class Adder {
+  int add(int a, int b) {
+    return a + b
+  }
+}
+```
+
+A constructor may use a bare `return` to exit early. These mistakes are reported before the
+program runs:
+
+- Using `this` outside a class
+- Returning a value from a constructor
+- Declaring a return type on a constructor, which always returns its instance
+
+Reading a property that is neither a field nor a method, or using property syntax on something
+that is not an instance, is a run-time error.
+
 ## Comments
 
 Line comments begin with `//`. Block comments use `/*` and `*/` and may be nested:

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text;
 
 namespace Fife.Core;
@@ -16,17 +17,24 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitCallExpr(Expr.Call expr) => Parenthesize("call", [expr.Callee, .. expr.Arguments]);
 
+    public string VisitGetExpr(Expr.Get expr) => Parenthesize(".", expr.Object, expr.Name.Lexeme);
+
     public string VisitGroupingExpr(Expr.Grouping expr) => Parenthesize("group", expr.Expression);
 
     public string VisitLiteralExpr(Expr.Literal expr) => Interpreter.Stringify(expr.Value);
 
     public string VisitLogicalExpr(Expr.Logical expr) => Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
 
+    public string VisitSetExpr(Expr.Set expr) => Parenthesize($"=", expr.Object, expr.Name.Lexeme, expr.Value);
+    public string VisitThisExpr(Expr.This expr) => "this";
+
     public string VisitUnaryExpr(Expr.Unary expr) => Parenthesize(expr.Operator.Lexeme, expr.Right);
 
     public string VisitVariableExpr(Expr.Variable expr) => expr.Name.Lexeme;
 
     public string VisitBlockStmt(Stmt.Block stmt) => $"(block {Print(stmt.Statements)})";
+
+    public string VisitClassStmt(Stmt.Class stmt) => $"(class {Print(stmt.Methods)})";
 
     public string VisitExpressionStmt(Stmt.Expression stmt) => Parenthesize(";", stmt.Expr);
 
@@ -47,15 +55,39 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitWhileStmt(Stmt.While stmt) => $"(while {Print(stmt.Condition)} {stmt.Body.Accept(this)})";
 
-    private string Parenthesize(string name, params Expr[] exprs)
+    private string Parenthesize(string name, params object[] parts)
     {
         StringBuilder builder = new();
         builder.Append('(').Append(name);
-        foreach (var expr in exprs)
-        {
-            builder.Append(' ').Append(expr.Accept(this));
-        }
+        Transform(builder, parts);
+        builder.Append(')');
 
-        return builder.Append(')').ToString();
+        return builder.ToString();
+    }
+
+    private void Transform(StringBuilder builder, object[] parts)
+    {
+        foreach (var part in parts)
+        {
+            builder.Append(' ');
+            switch (part)
+            {
+                case Expr expr:
+                    builder.Append(expr.Accept(this));
+                    break;
+                case Stmt stmt:
+                    builder.Append(stmt.Accept(this));
+                    break;
+                case Token token:
+                    builder.Append(token.Lexeme);
+                    break;
+                case IList list:
+                    Transform(builder, list.Cast<object>().ToArray());
+                    break;
+                default:
+                    builder.Append(part);
+                    break;
+            }
+        }
     }
 }

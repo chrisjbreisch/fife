@@ -17,6 +17,7 @@ public sealed class ParserTests
     [TestMethod]
     public void AppliesArithmeticPrecedence()
     {
+        // (;(+1(*23)))
         Assert.AreEqual("(; (+ 1 (* 2 3)))", Print("1 + 2 * 3\n"));
     }
 
@@ -68,9 +69,41 @@ public sealed class ParserTests
     }
 
     [TestMethod]
-    public void ParsesFunctionDeclarationsWithoutTypes()
+    public void ParsesClassDeclarations()
     {
         Assert.AreEqual(
+            "(class (var fun greet() (; (call writeln hi))))",
+            Print("class Greeter {\ngreet() {\nwriteln(\"hi\")\n}\n}\n"));
+        Assert.AreEqual("(class )", Print("class Empty {\n}\n"));
+    }
+
+    [TestMethod]
+    public void ParsesPropertyAccessAndAssignment()
+    {
+        Assert.AreEqual("(; (. a b))", Print("a.b\n"));
+        Assert.AreEqual("(; (= a b 1))", Print("a.b = 1\n"));
+        Assert.AreEqual("(; (call (. (. a b) c)))", Print("a.b.c()\n"));
+    }
+
+    [TestMethod]
+    public void ParsesThisInMethods()
+    {
+        Assert.AreEqual(
+            "(class (var fun get() (return (. this x))))",
+            Print("class C {\nget() {\nreturn this.x\n}\n}\n"));
+    }
+
+    [TestMethod]
+    public void ParsesTypedMethodDeclarations()
+    {
+        Assert.AreEqual(
+            "(class (int fun get(int n) (return n)))",
+            Print("class C {\nint get(int n) {\nreturn n\n}\n}\n"));
+    }
+
+    [TestMethod]
+    public void ParsesFunctionDeclarationsWithoutTypes()
+    {        Assert.AreEqual(
             "(var fun add(var a var b) (return (+ a b)))",
             Print("fun add(a, b) {\nreturn a + b\n}\n"));
         Assert.AreEqual(

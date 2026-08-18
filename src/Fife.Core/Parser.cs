@@ -5,6 +5,7 @@ namespace Fife.Core;
 ///
 /// program     -> declaration* EOF
 /// declaration -> funDecl | varDecl | statement
+/// classDecl   -> "class" IDENTIFIER "{" ( type? function )* "}" 
 /// funDecl     -> type? "fun" IDENTIFIER "(" parameters? ")" block
 /// varDecl     -> type IDENTIFIER ( "=" expression )? terminator
 /// parameters  -> type? IDENTIFIER ( "," type? IDENTIFIER )*
@@ -21,7 +22,7 @@ namespace Fife.Core;
 /// power       -> postfix ( "^" unary )?
 /// unary       -> ( "!" | "-" ) unary | power
 /// postfix     -> call ( "!!" )*
-/// call        -> primary ( "(" arguments? ")" )*
+/// call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
 /// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER
 /// </summary>
 public sealed class Parser(List<Token> tokens, IErrorReporter errors)
@@ -80,6 +81,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     {
         try
         {
+            if (Match(TokenType.Class)) return Class();
             if (Match(TokenType.Fun)) return Function("function", FifeType.Dynamic);
             if (MatchDeclarationType(out var type))
             {
@@ -93,6 +95,26 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             Synchronize();
             return null;
         }
+    }
+
+    private Stmt.Class Class()
+    {
+        Token name = Consume(TokenType.Identifier, "Expect class name.");
+        Consume(TokenType.LeftBrace, "Expect '{' before class body.");
+
+        List<Stmt.Function> methods = [];
+        while (!Check(TokenType.RightBrace) && !IsAtEnd)
+        {
+            SkipNewLines();
+            if (Check(TokenType.RightBrace)) break;
+
+            MatchDeclarationType(out var returnType);
+            methods.Add(Function("method", returnType));
+        }
+
+        Consume(TokenType.RightBrace, "Expect '}' after class body.");
+
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt.Function Function(string kind, FifeType returnType)
@@ -250,6 +272,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             {
                 return new Expr.Assign(variable.Name, value);
             }
+            else if (expr is Expr.Get get)
+            {
+                return new Expr.Set(get.Object, get.Name, value);
+            }
 
             Error(equals, "Invalid assignment target.");
         }
@@ -366,9 +392,18 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     private Expr Call()
     {
         var expr = Primary();
-        while (Match(TokenType.LeftParen))
+        while (true)
         {
-            expr = FinishCall(expr);
+            if (Match(TokenType.LeftParen))
+            {
+                expr = FinishCall(expr);
+            } 
+            else if (Match(TokenType.Dot))
+            {
+                Token name = Consume(TokenType.Identifier, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+            }
+            else break;
         }
 
         return expr;
@@ -402,6 +437,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         if (Match(TokenType.True)) return new Expr.Literal(true);
         if (Match(TokenType.Nil)) return new Expr.Literal(null);
         if (Match(TokenType.Number, TokenType.String)) return new Expr.Literal(Previous.Literal);
+        if (Match(TokenType.This)) return new Expr.This(Previous);
         if (Match(TokenType.Identifier)) return new Expr.Variable(Previous);
 
         if (Match(TokenType.LeftParen))

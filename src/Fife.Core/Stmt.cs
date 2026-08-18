@@ -7,6 +7,7 @@ public abstract class Stmt
     public interface IVisitor<out T>
     {
         T VisitBlockStmt(Block stmt);
+        T VisitClassStmt(Class @class);
         T VisitExpressionStmt(Expression stmt);
         T VisitFunctionStmt(Function stmt);
         T VisitIfStmt(If stmt);
@@ -70,5 +71,12 @@ public abstract class Stmt
         public Expr Condition { get; } = condition;
         public Stmt Body { get; } = body;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitWhileStmt(this);
+    }
+
+    public sealed class Class(Token name, List<Stmt.Function> methods) : Stmt
+    {
+        public Token Name { get; } = name;
+        public List<Stmt.Function> Methods { get; } = methods;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitClassStmt(this);
     }
 }

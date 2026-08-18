@@ -29,8 +29,8 @@ dotnet run --project src/Fife.Cli                          # start the REPL
 
 ## Language Reference
 
-See [LANGUAGE.md](LANGUAGE.md) for the types, operators, statement syntax, functions, comments,
-and standard library reference.
+See [LANGUAGE.md](LANGUAGE.md) for the types, operators, statement syntax, functions, classes,
+comments, and standard library reference.
 
 ## Extending it
 
@@ -38,5 +38,5 @@ and standard library reference.
 - **New syntax**: add a node to `Expr` or `Stmt` (plus its visitor method), parse it in `Parser`,
   then evaluate it in `Interpreter`. `AstPrinter` implements both visitors and will need the new
   method too, which keeps the compiler honest about missing cases.
-- **Next chapters from the book**: classes (`class`, `this`, `super`). The `Class`, `This` and
-  `Super` token types are already scanned.
+- **Next chapters from the book**: inheritance (`super`). The `Super` token type is already
+  scanned.

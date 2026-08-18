@@ -20,11 +20,12 @@ public sealed class NativeFunction(string name, int arity, int maxArity, Func<In
 }
 
 /// <summary>A function declared in fife source, closed over its defining scope.</summary>
-public sealed class FifeFunction(Stmt.Function declaration, FifeEnvironment closure) : ICallable
+public sealed class FifeFunction(Stmt.Function declaration, 
+    FifeEnvironment closure, bool isConstructor) : ICallable
 {
     public int Arity => declaration.Parameters.Count;
     public int MaxArity => Arity;
-
+    
     public object? Call(Interpreter interpreter, List<object?> arguments)
     {
         FifeEnvironment environment = new(closure);
@@ -48,7 +49,7 @@ public sealed class FifeFunction(Stmt.Function declaration, FifeEnvironment clos
         }
         catch (ReturnException returnValue)
         {
-            result = returnValue.Value;
+            result = isConstructor ? closure.GetAt(0, "this") : returnValue.Value;
         }
 
         if (!FifeTypes.Accepts(declaration.ReturnType, result))
@@ -57,11 +58,18 @@ public sealed class FifeFunction(Stmt.Function declaration, FifeEnvironment clos
                 declaration.Name,
                 $"Function '{declaration.Name.Lexeme}' must return {FifeTypes.ValueDescription(declaration.ReturnType)}.");
         }
-
+        
         return result;
     }
 
     public override string ToString() => $"<fn {declaration.Name.Lexeme}>";
+
+    public FifeFunction Bind(ClassInstance instance)
+    {
+        var environment = new FifeEnvironment(closure);
+        environment.Define("this", instance);
+        return new FifeFunction(declaration, environment, isConstructor);
+    }
 }
 
 /// <summary>Unwinds the C# stack to implement a fife <c>return</c>.</summary>

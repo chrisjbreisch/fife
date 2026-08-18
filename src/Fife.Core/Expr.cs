@@ -9,9 +9,12 @@ public abstract class Expr
         T VisitAssignExpr(Assign expr);
         T VisitBinaryExpr(Binary expr);
         T VisitCallExpr(Call expr);
+        T VisitGetExpr(Get expr);
         T VisitGroupingExpr(Grouping expr);
         T VisitLiteralExpr(Literal expr);
         T VisitLogicalExpr(Logical expr);
+        T VisitSetExpr(Set expr);
+        T VisitThisExpr(This expr);
         T VisitUnaryExpr(Unary expr);
         T VisitVariableExpr(Variable expr);
     }
@@ -39,6 +42,14 @@ public abstract class Expr
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitCallExpr(this);
     }
 
+    public sealed class Get(Expr obj, Token name) : Expr
+    {
+        public Expr Object { get; } = obj;
+        public Token Name { get; } = name;
+
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitGetExpr(this);
+    }
+
     public sealed class Grouping(Expr expression) : Expr
     {
         public Expr Expression { get; } = expression;
@@ -57,6 +68,21 @@ public abstract class Expr
         public Token Operator { get; } = op;
         public Expr Right { get; } = right;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitLogicalExpr(this);
+    }
+
+    public sealed class Set(Expr obj, Token name, Expr value) : Expr
+    {
+        public Expr Object { get; } = obj;
+        public Token Name { get; } = name;
+        public Expr Value { get; } = value;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitSetExpr(this);
+
+    }
+
+    public sealed class This(Token keyword) : Expr
+    {
+        public Token Keyword { get; } = keyword;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitThisExpr(this);
     }
 
     public sealed class Unary(Token op, Expr right) : Expr

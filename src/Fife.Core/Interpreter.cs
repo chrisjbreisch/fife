@@ -108,6 +108,23 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         return null;
     }
 
+    public object? VisitClassStmt(Stmt.Class stmt)
+    {
+        _environment.Define(stmt.Name.Lexeme, null);
+
+        Dictionary<string, FifeFunction> methods = [];
+        foreach (var method in stmt.Methods)
+        {
+            var function = new FifeFunction(method, _environment, method.Name.Lexeme == stmt.Name.Lexeme);
+            methods[method.Name.Lexeme] = function;
+        }
+
+        var classDefinition = new ClassDefinition(stmt.Name.Lexeme, methods);
+        _environment.Assign(stmt.Name, classDefinition);
+
+        return null;
+    }
+
     public object? VisitExpressionStmt(Stmt.Expression stmt)
     {
         Evaluate(stmt.Expr);
@@ -116,7 +133,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitFunctionStmt(Stmt.Function stmt)
     {
-        _environment.Define(stmt.Name.Lexeme, new FifeFunction(stmt, _environment));
+        _environment.Define(stmt.Name.Lexeme, new FifeFunction(stmt, _environment, false));
         return null;
     }
 
@@ -247,6 +264,15 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         return callable.Call(this, arguments);
     }
 
+    public object? VisitGetExpr(Expr.Get expr)
+    {
+        var obj = Evaluate(expr.Object);
+        if (obj is ClassInstance instance)
+            return instance.Get(expr.Name);
+
+        throw new RuntimeError(expr.Name, "Only class instances have properties.");
+    }
+
     public object? VisitGroupingExpr(Expr.Grouping expr) => Evaluate(expr.Expression);
 
     public object? VisitLiteralExpr(Expr.Literal expr) => expr.Value;
@@ -265,6 +291,24 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         }
 
         return Evaluate(expr.Right);
+    }
+
+    public object? VisitSetExpr(Expr.Set expr)
+    {
+        var obj = Evaluate(expr.Object);
+
+        if (obj is not ClassInstance instance) 
+            throw new RuntimeError(expr.Name, "Only class instances have fields.");
+
+        var value = Evaluate(expr.Value);
+        instance.Set(expr.Name, value);
+        return value;
+
+    }
+
+    public object? VisitThisExpr(Expr.This expr)
+    {
+        return LookupVariable(expr.Keyword, expr);
     }
 
     public object? VisitUnaryExpr(Expr.Unary expr)

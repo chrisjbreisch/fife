@@ -250,6 +250,154 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void InstantiatesClassesAndCallsMethods()
+    {
+        Assert.AreEqual("hi", Run(
+            "class Greeter {\ngreet() {\nwriteln(\"hi\")\n}\n}\nvar g = Greeter()\ng.greet()\n"));
+    }
+
+    [TestMethod]
+    public void RunsTheConstructorNamedAfterTheClass()
+    {
+        Assert.AreEqual("hi, world", Run(
+            "class Greeter {\nGreeter(name) {\nthis.name = name\n}\ngreet() {\nwriteln(\"hi, \" + this.name)\n}\n}\nGreeter(\"world\").greet()\n"));
+    }
+
+    [TestMethod]
+    public void ReadsAndWritesFieldsFromOutsideTheClass()
+    {
+        Assert.AreEqual("1\n2", Run(
+            "class Box {\n}\nvar b = Box()\nb.value = 1\nwriteln(b.value)\nb.value = 2\nwriteln(b.value)\n"));
+    }
+
+    [TestMethod]
+    public void BindsThisWhenAMethodIsStoredInAVariable()
+    {
+        Assert.AreEqual("5", Run(
+            "class Box {\nBox(v) {\nthis.v = v\n}\nget() {\nreturn this.v\n}\n}\nvar m = Box(5).get\nwriteln(m())\n"));
+    }
+
+    [TestMethod]
+    public void PrefersFieldsOverMethodsWithTheSameName()
+    {
+        Assert.AreEqual("field", Run(
+            "class C {\nvalue() {\nreturn \"method\"\n}\n}\nvar c = C()\nc.value = \"field\"\nwriteln(c.value)\n"));
+    }
+
+    [TestMethod]
+    public void StringifiesClassesAndInstances()
+    {
+        Assert.AreEqual("Box\nBox instance", Run(
+            "class Box {\n}\nwriteln(Box)\nwriteln(Box())\n"));
+    }
+
+    [TestMethod]
+    public void AllowsAnEmptyReturnToExitAConstructorEarly()
+    {
+        Assert.AreEqual("1\n2", Run(
+            "class C {\nC(skip) {\nthis.v = 1\nif (skip) return\nthis.v = 2\n}\n}\nwriteln(C(true).v)\nwriteln(C(false).v)\n"));
+    }
+
+    [TestMethod]
+    public void ChecksConstructorArity()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class C {\nC(a) {\nthis.a = a\n}\n}\nC()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Expected 1 arguments but got 0.");
+    }
+
+    [TestMethod]
+    public void ReportsUndefinedProperty()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class C {\n}\nC().missing\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Undefined property 'missing'.");
+    }
+
+    [TestMethod]
+    public void ReportsPropertyAccessOnNonInstances()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var x = 1\nwriteln(x.field)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only class instances have properties.");
+    }
+
+    [TestMethod]
+    public void ReportsFieldAssignmentOnNonInstances()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var x = 1\nx.field = 2\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only class instances have fields.");
+    }
+
+    [TestMethod]
+    public void ReportsThisOutsideOfAClass()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("writeln(this)\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't use 'this' outside of a class.");
+    }
+
+    [TestMethod]
+    public void ReportsReturningAValueFromAConstructor()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class C {\nC() {\nreturn 1\n}\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't return a value from a constructor.");
+    }
+
+    [TestMethod]
+    public void EnforcesDeclaredMethodReturnTypes()
+    {
+        Assert.AreEqual("3", Run(
+            "class C {\nint add(int a, int b) {\nreturn a + b\n}\n}\nwriteln(C().add(1, 2))\n"));
+
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class C {\nstring name() {\nreturn 1\n}\n}\nC().name()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "must return a string value.");
+    }
+
+    [TestMethod]
+    public void ReportsAReturnTypeOnAConstructor()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class C {\nint C() {\n}\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "A constructor can't declare a return type.");
+    }
+
+    [TestMethod]
     public void RejectsArgumentsThatDoNotMatchParameterTypes()
     {
         StringWriter output = new();
