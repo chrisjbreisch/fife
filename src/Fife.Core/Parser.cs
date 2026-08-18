@@ -3,22 +3,22 @@ namespace Fife.Core;
 /// <summary>
 /// Recursive-descent parser.
 ///
-/// program     -> declaration* EOF ;
-/// declaration -> funDecl | varDecl | statement ;
-/// statement   -> exprStmt | forStmt | ifStmt | returnStmt | whileStmt | block ;
-/// expression  -> assignment ;
-/// assignment  -> IDENTIFIER "=" assignment | logic_or ;
-/// logic_or    -> logic_and ( "or" logic_and )* ;
-/// logic_and   -> equality ( "and" equality )* ;
-/// equality    -> comparison ( ( "!=" | "==" ) comparison )* ;
-/// comparison  -> term ( ( "&gt;" | "&gt;=" | "&lt;" | "&lt;=" ) term )* ;
-/// term        -> factor ( ( "-" | "+" ) factor )* ;
-/// factor      -> power ( ( "/" | "*" ) power )* ;
-/// power       -> postfix ( "^" unary )? ;
-/// unary       -> ( "!" | "-" ) unary | power ;
-/// postfix     -> call ( "!!" )* ;
-/// call        -> primary ( "(" arguments? ")" )* ;
-/// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER ;
+/// program     -> declaration* EOF
+/// declaration -> funDecl | varDecl | statement
+/// statement   -> exprStmt | forStmt | ifStmt | returnStmt | whileStmt | block
+/// expression  -> assignment
+/// assignment  -> IDENTIFIER "=" assignment | logic_or
+/// logic_or    -> logic_and ( "or" logic_and )*
+/// logic_and   -> equality ( "and" equality )*
+/// equality    -> comparison ( ( "!=" | "<>" | "==" ) comparison )*
+/// comparison  -> term ( ( ">" | ">=" | "<" | "<=" ) term )*
+/// term        -> factor ( ( "-" | "+" ) factor )*
+/// factor      -> power ( ( "/" | "*" ) power )*
+/// power       -> postfix ( "^" unary )?
+/// unary       -> ( "!" | "-" ) unary | power
+/// postfix     -> call ( "!!" )*
+/// call        -> primary ( "(" arguments? ")" )*
+/// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER
 /// </summary>
 public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 {

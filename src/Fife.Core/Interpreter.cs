@@ -62,12 +62,13 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     public void DefineNative(string name, int arity, Func<Interpreter, List<object?>, object?> body) =>
         Globals.Define(name, new NativeFunction(name, arity, arity, body));
 
-    public void DefineNative(string name, int minArity, int maxArity, Func<Interpreter, List<object?>, object?> body) =>
-        Globals.Define(name, new NativeFunction(name, minArity, maxArity, body));
+    public void DefineNative(string name, int minArity, int maxArity, Func<Interpreter, List<object?>, object?> body) 
+        => Globals.Define(name, new NativeFunction(name, minArity, maxArity, body));
 
     private void DefineStandardLibrary()
     {
-        DefineNative("clock", 0, (_, _) => (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0);
+        DefineNative("clock", 0, (_, _) 
+            => (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0);
         DefineNative("read", 0, 1, (interpreter, arguments) =>
         {
             WritePrompt(interpreter, arguments);
@@ -137,31 +138,13 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitVarStmt(Stmt.Var stmt)
     {
-        var value = stmt.Initializer is null && stmt.Type is FifeType.Int or FifeType.Float
-            ? 0d
-            : stmt.Initializer is null && stmt.Type == FifeType.Bool
-                ? false
-                : stmt.Initializer is null && stmt.Type == FifeType.String
-                    ? ""
-            : stmt.Initializer is null ? null : Evaluate(stmt.Initializer);
-        if (stmt.Type == FifeType.Int && (value is not double number || number != Math.Truncate(number)))
-        {
-            throw new RuntimeError(stmt.Name, "Integer variables require an integer value.");
-        }
+        var value = stmt.Initializer is null
+            ? FifeTypes.DefaultValue(stmt.Type)
+            : Evaluate(stmt.Initializer);
 
-        if (stmt.Type == FifeType.Float && value is not double)
+        if (!FifeTypes.Accepts(stmt.Type, value))
         {
-            throw new RuntimeError(stmt.Name, "Float variables require a number value.");
-        }
-
-        if (stmt.Type == FifeType.Bool && value is not bool)
-        {
-            throw new RuntimeError(stmt.Name, "Bool variables require a boolean value.");
-        }
-
-        if (stmt.Type == FifeType.String && value is not string)
-        {
-            throw new RuntimeError(stmt.Name, "String variables require a string value.");
+            throw new RuntimeError(stmt.Name, FifeTypes.VariableRequirement(stmt.Type));
         }
 
         _environment.Define(stmt.Name.Lexeme, value, stmt.Type);

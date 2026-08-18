@@ -33,24 +33,9 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
         {
             if (env._values.TryGetValue(name.Lexeme, out var binding))
             {
-                if (binding.Type == FifeType.Int && (value is not double number || number != Math.Truncate(number)))
+                if (!FifeTypes.Accepts(binding.Type, value))
                 {
-                    throw new RuntimeError(name, "Integer variables require an integer value.");
-                }
-
-                if (binding.Type == FifeType.Float && value is not double)
-                {
-                    throw new RuntimeError(name, "Float variables require a number value.");
-                }
-
-                if (binding.Type == FifeType.Bool && value is not bool)
-                {
-                    throw new RuntimeError(name, "Bool variables require a boolean value.");
-                }
-
-                if (binding.Type == FifeType.String && value is not string)
-                {
-                    throw new RuntimeError(name, "String variables require a string value.");
+                    throw new RuntimeError(name, FifeTypes.VariableRequirement(binding.Type));
                 }
 
                 binding.Value = value;
