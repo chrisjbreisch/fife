@@ -28,6 +28,12 @@ public sealed class FifeEngine
 
         if (_errors.HadError) return;
 
+        var resolver = new Resolver(_interpreter);
+        resolver.Resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (HadError) return;
+
         _interpreter.Interpret(statements);
     }
 

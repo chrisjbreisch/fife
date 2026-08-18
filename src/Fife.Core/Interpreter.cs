@@ -4,6 +4,7 @@ namespace Fife.Core;
 public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
     private readonly IErrorReporter _errors;
+    private Dictionary<Expr, int> _locals = [];
 
     public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
     {
@@ -166,7 +167,12 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     public object? VisitAssignExpr(Expr.Assign expr)
     {
         var value = Evaluate(expr.Value);
-        _environment.Assign(expr.Name, value);
+        
+        if (_locals.TryGetValue(expr, out int distance))
+            _environment.AssignAt(distance, expr.Name, value);
+        else
+            Globals.Assign(expr.Name, value);
+        
         return value;
     }
 
@@ -279,9 +285,18 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         return null;
     }
 
-    public object? VisitVariableExpr(Expr.Variable expr) => _environment.Get(expr.Name);
+    public object? VisitVariableExpr(Expr.Variable expr) => LookupVariable(expr.Name, expr);
 
     // --- Helpers ---
+
+    private object? LookupVariable(Token name, Expr expr)
+    {
+        if (_locals.TryGetValue(expr, out int distance))
+            return _environment.GetAt(distance, name.Lexeme);
+        else
+            return Globals.Get(name);
+    }
+
 
     /// <summary>Everything except <c>nil</c> and <c>false</c> is truthy.</summary>
     public static bool IsTruthy(object? value) => value switch
@@ -337,5 +352,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         }
 
         return result;
+    }
+
+    public void Resolve(Expr expr, int depth)
+    {
+        _locals[expr] = depth;
     }
 }

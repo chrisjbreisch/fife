@@ -26,6 +26,22 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
 
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
     }
+    
+    public object? GetAt(int distance, string name)
+    {
+         return Ancestor(distance)._values[name].Value;
+    }
+
+    private FifeEnvironment Ancestor(int distance)
+    {
+        FifeEnvironment environment = this;
+
+        for (int i = 0; i < distance; i++)
+            environment = environment!.Enclosing!;
+
+        return environment;
+    }
+
 
     public void Assign(Token name, object? value)
     {
@@ -41,6 +57,22 @@ public sealed class FifeEnvironment(FifeEnvironment? enclosing = null)
                 binding.Value = value;
                 return;
             }
+        }
+
+        throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
+    }
+
+    public void AssignAt(int distance, Token name, object? value)
+    {
+        if (Ancestor(distance)._values.TryGetValue(name.Lexeme, out var binding))
+        {
+            if (!FifeTypes.Accepts(binding.Type, value))
+            {
+                throw new RuntimeError(name, FifeTypes.VariableRequirement(binding.Type));
+            }
+
+            binding.Value = value;
+            return;
         }
 
         throw new RuntimeError(name, $"Undefined variable '{name.Lexeme}'.");
