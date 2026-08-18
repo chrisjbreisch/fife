@@ -14,7 +14,8 @@ Robert Nystrom's [Crafting Interpreters](https://craftinginterpreters.com/).
 
 ### Core pipeline
 
-`Scanner` -> `Parser` -> `Interpreter`, orchestrated by `FifeEngine`. All diagnostics flow through
+`Scanner` -> `Parser` -> `Resolver` -> `Interpreter`, orchestrated by `FifeEngine`. The resolver
+binds each variable reference to its declaring scope before execution. All diagnostics flow through
 `IErrorReporter`, so a host can capture errors instead of writing to the console.
 
 ## Build and run
@@ -37,5 +38,5 @@ and standard library reference.
 - **New syntax**: add a node to `Expr` or `Stmt` (plus its visitor method), parse it in `Parser`,
   then evaluate it in `Interpreter`. `AstPrinter` implements both visitors and will need the new
   method too, which keeps the compiler honest about missing cases.
-- **Next chapters from the book**: a `Resolver` pass for static scope resolution, then classes
-  (`class`, `this`, `super`). The `Class`, `This` and `Super` token types are already scanned.
+- **Next chapters from the book**: classes (`class`, `this`, `super`). The `Class`, `This` and
+  `Super` token types are already scanned.

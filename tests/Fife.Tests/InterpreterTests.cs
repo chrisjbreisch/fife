@@ -187,6 +187,69 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ResolvesVariablesToTheirDeclaringScope()
+    {
+        Assert.AreEqual("global\nglobal", Run(
+            "var a = \"global\"\n{\nfun showA() {\nwriteln(a)\n}\nshowA()\nvar a = \"block\"\nshowA()\n}\n"));
+    }
+
+    [TestMethod]
+    public void ResolvesVariablesForReplInput()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        foreach (var line in new[]
+        {
+            "var a = \"global\"", "{", "fun showA() {", "writeln(a)", "}",
+            "showA()", "var a = \"block\"", "showA()", "}"
+        })
+        {
+            engine.RunRepl(line);
+        }
+
+        Assert.AreEqual("global\nglobal\n", output.ToString().ReplaceLineEndings("\n"));
+        Assert.IsFalse(engine.HadError);
+    }
+
+    [TestMethod]
+    public void ReportsReturnFromTopLevelCode()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("return 1\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't return from top-level code.");
+    }
+
+    [TestMethod]
+    public void ReportsVariableReadInItsOwnInitializer()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("{\nvar a = a\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't read local variable in its own initializer.");
+    }
+
+    [TestMethod]
+    public void ReportsDuplicateDeclarationInTheSameScope()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("{\nvar a = 1\nvar a = 2\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Already a variable with this name in this scope.");
+    }
+
+    [TestMethod]
     public void RejectsArgumentsThatDoNotMatchParameterTypes()
     {
         StringWriter output = new();

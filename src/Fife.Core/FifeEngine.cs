@@ -28,7 +28,7 @@ public sealed class FifeEngine
 
         if (_errors.HadError) return;
 
-        var resolver = new Resolver(_interpreter);
+        var resolver = new Resolver(_interpreter, _errors);
         resolver.Resolve(statements);
 
         // Stop if there was a resolution error.
@@ -67,22 +67,34 @@ public sealed class FifeEngine
             var expr = new Parser(tokens, probe).ParseExpression();
             if (expr is not null && !probe.HadError)
             {
-                try
+                new Resolver(_interpreter, probe).Resolve(expr);
+
+                if (!probe.HadError)
                 {
-                    var value = _interpreter.Evaluate(expr);
-                    _replSource = "";
-                    return value;
-                }
-                catch (RuntimeError error)
-                {
-                    _errors.RuntimeError(error);
-                    _replSource = "";
-                    return null;
+                    try
+                    {
+                        var value = _interpreter.Evaluate(expr);
+                        _replSource = "";
+                        return value;
+                    }
+                    catch (RuntimeError error)
+                    {
+                        _errors.RuntimeError(error);
+                        _replSource = "";
+                        return null;
+                    }
                 }
             }
         }
 
         var statements = new Parser(tokens, _errors).Parse();
+        if (_errors.HadError)
+        {
+            _replSource = "";
+            return null;
+        }
+
+        new Resolver(_interpreter, _errors).Resolve(statements);
         if (_errors.HadError)
         {
             _replSource = "";

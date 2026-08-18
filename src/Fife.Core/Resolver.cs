@@ -1,9 +1,10 @@
 ﻿
 namespace Fife.Core;
 
-public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
+public sealed class Resolver : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
     private readonly Interpreter _interpreter;
+    private readonly IErrorReporter _errors;
     private readonly Stack<Dictionary<string, bool>> _scopes = [];
 
     private enum FunctionType
@@ -14,9 +15,10 @@ public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     private FunctionType _currentFunction = FunctionType.None;
 
-    public Resolver(Interpreter interpreter)
+    public Resolver(Interpreter interpreter, IErrorReporter errors)
     {
         _interpreter = interpreter;
+        _errors = errors;
     }
 
     public object? VisitAssignExpr(Expr.Assign expr)
@@ -76,7 +78,7 @@ public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
         if (_scopes.Count > 0 && 
             _scopes.Peek().TryGetValue(expr.Name.Lexeme, out var defined) && !defined)
-            throw new RuntimeError(expr.Name, "Can't read local variable in its own initializer.");
+            _errors.Error(expr.Name, "Can't read local variable in its own initializer.");
 
         ResolveLocal(expr, expr.Name);
 
@@ -182,7 +184,7 @@ public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     public object? VisitReturnStmt(Stmt.Return stmt)
     {
         if (_currentFunction == FunctionType.None)
-            throw new RuntimeError(stmt.Keyword, "Can't return from top-level code.");
+            _errors.Error(stmt.Keyword, "Can't return from top-level code.");
 
         if (stmt.Value != null)
             Resolve(stmt.Value);
@@ -192,6 +194,8 @@ public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitVarStmt(Stmt.Var stmt)
     {
+        Declare(stmt.Name);
+
         if (stmt.Initializer != null)
             Resolve(stmt.Initializer);
 
@@ -207,9 +211,9 @@ public sealed class Resolver  : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         var scope = _scopes.Peek();
 
         if (scope.ContainsKey(name.Lexeme))
-            throw new RuntimeError(name, "Already a variable with this name in this scope.");
+            _errors.Error(name, "Already a variable with this name in this scope.");
 
-        scope.Add(name.Lexeme, false);
+        scope[name.Lexeme] = false;
     }
 
     private void Define(Token name)

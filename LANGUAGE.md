@@ -75,6 +75,37 @@ Supported statement forms are:
 
 The former `print` statement is not part of the language. Use `writeln(...)` or `write(...)`.
 
+## Scope
+
+A block introduces a new scope, and an inner declaration shadows an outer one of the same name.
+Every variable reference is bound to its declaring scope before the program runs, so a reference
+always means the same variable no matter when it is evaluated:
+
+```fife
+var a = "global"
+{
+  fun showA() {
+    writeln(a)
+  }
+
+  showA()      // global
+  var a = "block"
+  showA()      // global
+}
+```
+
+The second `showA()` still writes `global`, because the `a` inside `showA` was bound to the outer
+declaration when the function was declared.
+
+Three mistakes are reported before execution begins:
+
+- Reading a local variable inside its own initializer, as in `var a = a`
+- Declaring the same name twice in one local scope
+- Using `return` outside a function
+
+Declaring the same name twice is allowed at the top level, which keeps redefinition convenient in
+the REPL.
+
 ## Functions
 
 Functions are declared with `fun`. A function may state a return type before `fun`, and each
