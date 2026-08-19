@@ -317,8 +317,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         return Evaluate(expr.Right);
     }
 
-    public object? VisitSetExpr(Expr.Set expr)
-    {
+    public object? VisitPostfixExpr(Expr.Postfix expr) =>
+        Factorial(expr.Operator, Evaluate(expr.Operand));
+
+    public object? VisitSetExpr(Expr.Set expr)    {
         var obj = Evaluate(expr.Object);
 
         if (obj is not ClassInstance instance) 
@@ -346,8 +348,6 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             case TokenType.Minus:
                 CheckNumberOperand(expr.Operator, right);
                 return -(double)right!;
-            case TokenType.BangBang:
-                return Factorial(expr.Operator, right);
         }
 
         return null;

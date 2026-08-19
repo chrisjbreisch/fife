@@ -139,7 +139,7 @@ public sealed class InterpreterTests
     public void EvaluatesExponentiationAndFactorial()
     {
         Assert.AreEqual("8\n1\n2\n6\n24\n120\n720", Run(
-            "writeln(2 ^ 3)\nwriteln(1!!)\nwriteln(2!!)\nwriteln(3!!)\nwriteln(4!!)\nwriteln(5!!)\nwriteln(6!!)\n"));
+            "writeln(2 ^ 3)\nwriteln(1!)\nwriteln(2!)\nwriteln(3!)\nwriteln(4!)\nwriteln(5!)\nwriteln(6!)\n"));
     }
 
     [TestMethod]

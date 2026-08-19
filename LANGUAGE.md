@@ -36,11 +36,11 @@ value. `var` declarations remain dynamically typed.
 | `*` | Multiplication |
 | `/` | Division |
 | `^` | Exponentiation |
-| `!!` | Factorial; for example, `6!!` is `720` |
+| `!` (postfix) | Factorial; for example, `6!` is `720` |
 | `==` | Equality |
 | `!=`, `<>` | Inequality |
 | `<`, `<=`, `>`, `>=` | Numeric comparison |
-| `!` | Boolean negation |
+| `!` (prefix) | Boolean negation |
 | `and`, `or` | Logical operators |
 
 Exponentiation is right-associative, so `2 ^ 3 ^ 2` means `2 ^ (3 ^ 2)`.

@@ -7,7 +7,7 @@ public enum TokenType
     Comma, Dot, Minus, Plus, Semicolon, Slash, Star, Caret, NewLine,
 
     // One or two character tokens.
-    Bang, BangBang, BangEqual,
+    Bang, BangEqual,
     Equal, EqualEqual,
     Greater, GreaterEqual,
     Less, LessEqual,

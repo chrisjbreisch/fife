@@ -70,10 +70,10 @@ public sealed class ScannerTests
     [TestMethod]
     public void ScansExponentAndFactorialOperators()
     {
-        var tokens = Scan("2^3 6!!");
+        var tokens = Scan("2^3 6!");
 
         CollectionAssert.AreEqual(
-            new[] { TokenType.Number, TokenType.Caret, TokenType.Number, TokenType.Number, TokenType.BangBang, TokenType.Eof },
+            new[] { TokenType.Number, TokenType.Caret, TokenType.Number, TokenType.Number, TokenType.Bang, TokenType.Eof },
             tokens.Select(t => t.Type).ToArray());
     }
 

@@ -25,8 +25,9 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitLogicalExpr(Expr.Logical expr) => Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
 
-    public string VisitSetExpr(Expr.Set expr) => Parenthesize($"=", expr.Object, expr.Name.Lexeme, expr.Value);
-    public string VisitThisExpr(Expr.This expr) => "this";
+    public string VisitPostfixExpr(Expr.Postfix expr) => Parenthesize($"{expr.Operator.Lexeme} postfix", expr.Operand);
+
+    public string VisitSetExpr(Expr.Set expr) => Parenthesize($"=", expr.Object, expr.Name.Lexeme, expr.Value);    public string VisitThisExpr(Expr.This expr) => "this";
 
     public string VisitUnaryExpr(Expr.Unary expr) => Parenthesize(expr.Operator.Lexeme, expr.Right);
 

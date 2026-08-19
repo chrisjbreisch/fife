@@ -21,7 +21,7 @@ namespace Fife.Core;
 /// factor      -> power ( ( "/" | "*" ) power )*
 /// power       -> postfix ( "^" unary )?
 /// unary       -> ( "!" | "-" ) unary | power
-/// postfix     -> call ( "!!" )*
+/// postfix     -> call ( "!" )*
 /// call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
 /// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER
 /// </summary>
@@ -381,9 +381,9 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     private Expr Postfix()
     {
         var expr = Call();
-        while (Match(TokenType.BangBang))
+        while (Match(TokenType.Bang))
         {
-            expr = new Expr.Unary(Previous, expr);
+            expr = new Expr.Postfix(Previous, expr);
         }
 
         return expr;

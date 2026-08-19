@@ -13,6 +13,7 @@ public abstract class Expr
         T VisitGroupingExpr(Grouping expr);
         T VisitLiteralExpr(Literal expr);
         T VisitLogicalExpr(Logical expr);
+        T VisitPostfixExpr(Postfix expr);
         T VisitSetExpr(Set expr);
         T VisitThisExpr(This expr);
         T VisitUnaryExpr(Unary expr);
@@ -70,13 +71,19 @@ public abstract class Expr
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitLogicalExpr(this);
     }
 
+    public sealed class Postfix(Token op, Expr operand) : Expr
+    {
+        public Token Operator { get; } = op;
+        public Expr Operand { get; } = operand;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitPostfixExpr(this);
+    }
+
     public sealed class Set(Expr obj, Token name, Expr value) : Expr
     {
         public Expr Object { get; } = obj;
         public Token Name { get; } = name;
         public Expr Value { get; } = value;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitSetExpr(this);
-
     }
 
     public sealed class This(Token keyword) : Expr

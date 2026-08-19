@@ -25,7 +25,9 @@ public sealed class ParserTests
     public void ParsesPowerAsRightAssociativeAndFactorialAsPostfix()
     {
         Assert.AreEqual("(; (^ 2 (^ 3 2)))", Print("2 ^ 3 ^ 2\n"));
-        Assert.AreEqual("(; (!! 6))", Print("6!!\n"));
+        Assert.AreEqual("(; (! postfix 6))", Print("6!\n"));
+        Assert.AreEqual("(; (! (! postfix a)))", Print("!a!\n"));
+        Assert.AreEqual("(; (! (! a)))", Print("!!a\n"));
     }
 
     [TestMethod]

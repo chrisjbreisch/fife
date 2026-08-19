@@ -75,6 +75,13 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         return null;
     }
 
+    public object? VisitPostfixExpr(Expr.Postfix expr)
+    {
+        Resolve(expr.Operand);
+
+        return null;
+    }
+
     public object? VisitSetExpr(Expr.Set expr)
     {
         Resolve(expr.Value);
