@@ -398,6 +398,97 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ReportsACallStackForNestedCalls()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("fun inner() {\nreturn 1 - \"two\"\n}\nfun outer() {\nreturn inner()\n}\nouter()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        Assert.AreEqual(
+            "Operands must be numbers.\n[line 2] in inner\n[line 5] in outer\n[line 7] in script\n",
+            output.ToString().ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public void ReportsTopLevelErrorsWithoutFrames()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var x = 1 - \"two\"\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        Assert.AreEqual(
+            "Operands must be numbers.\n[line 1] in script\n",
+            output.ToString().ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public void IncludesNativeFunctionsInTheCallStack()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Interpreter.DefineNative("boom", 0, (_, _) =>
+            throw new RuntimeError(new Token(TokenType.Identifier, "boom", null, 1, 1), "Native failure."));
+
+        engine.Run("fun go() {\nreturn boom()\n}\ngo()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        Assert.AreEqual(
+            "Native failure.\n[line 1] in boom\n[line 2] in go\n[line 4] in script\n",
+            output.ToString().ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    public void StopsRunawayRecursionAtTheCallDepthLimit()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("fun f(n) {\nreturn f(n + 1)\n}\nf(0)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(
+            output.ToString(),
+            $"Stack overflow: exceeded the maximum call depth of {Interpreter.MaxCallDepth}.");
+    }
+
+    [TestMethod]
+    public void TruncatesVeryDeepCallStacks()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("fun f(n) {\nreturn f(n + 1)\n}\nf(0)\n");
+
+        var lines = output.ToString().ReplaceLineEndings("\n").TrimEnd('\n').Split('\n');
+
+        Assert.IsTrue(lines.Length < 20, $"Trace was not truncated: {lines.Length} lines.");
+        StringAssert.EndsWith(lines[^1], " more");
+    }
+
+    [TestMethod]
+    public void UnwindsTheCallStackAfterAnError()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        engine.Run("fun bad() {\nreturn 1 - \"two\"\n}\nbad()\n");
+        engine.Reset();
+        output.GetStringBuilder().Clear();
+
+        engine.Run("fun good() {\nreturn 1 - \"two\"\n}\ngood()\n");
+
+        Assert.AreEqual(
+            "Operands must be numbers.\n[line 2] in good\n[line 4] in script\n",
+            output.ToString().ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
     public void RejectsArgumentsThatDoNotMatchParameterTypes()
     {
         StringWriter output = new();

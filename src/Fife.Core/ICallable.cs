@@ -3,6 +3,7 @@ namespace Fife.Core;
 /// <summary>Anything invokable from fife source: user functions and host-provided natives.</summary>
 public interface ICallable
 {
+    string Name { get; }
     int Arity { get; }
     int MaxArity { get; }
     object? Call(Interpreter interpreter, List<object?> arguments);
@@ -11,18 +12,20 @@ public interface ICallable
 /// <summary>A function implemented in C# and exposed to fife programs.</summary>
 public sealed class NativeFunction(string name, int arity, int maxArity, Func<Interpreter, List<object?>, object?> body) : ICallable
 {
+    public string Name { get; } = name;
     public int Arity { get; } = arity;
     public int MaxArity { get; } = maxArity;
 
     public object? Call(Interpreter interpreter, List<object?> arguments) => body(interpreter, arguments);
 
-    public override string ToString() => $"<native fn {name}>";
+    public override string ToString() => $"<native fn {Name}>";
 }
 
 /// <summary>A function declared in fife source, closed over its defining scope.</summary>
 public sealed class FifeFunction(Stmt.Function declaration, 
     FifeEnvironment closure, bool isConstructor) : ICallable
 {
+    public string Name => declaration.Name.Lexeme;
     public int Arity => declaration.Parameters.Count;
     public int MaxArity => Arity;
     

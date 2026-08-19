@@ -3,7 +3,12 @@ namespace Fife.Core;
 /// <summary>Tree-walking evaluator for fife.</summary>
 public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 {
+    /// <summary>Deliberately small: fife programs are expected to be scripts, and this keeps a
+    /// runaway recursion from overflowing the host stack, which .NET cannot recover from.</summary>
+    public const int MaxCallDepth = 100;
+
     private readonly IErrorReporter _errors;
+    private readonly Stack<CallFrame> _frames = new();
     private Dictionary<Expr, int> _locals = [];
 
     public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
@@ -261,7 +266,26 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             throw new RuntimeError(expr.Paren, $"Expected {expected} arguments but got {arguments.Count}.");
         }
 
-        return callable.Call(this, arguments);
+        if (_frames.Count >= MaxCallDepth)
+        {
+            throw new RuntimeError(expr.Paren, $"Stack overflow: exceeded the maximum call depth of {MaxCallDepth}.");
+        }
+
+        _frames.Push(new CallFrame(callable.Name, expr.Paren));
+        try
+        {
+            return callable.Call(this, arguments);
+        }
+        catch (RuntimeError error)
+        {
+            // The innermost frame to see the error captures the deepest stack.
+            error.Frames ??= _frames.ToArray();
+            throw;
+        }
+        finally
+        {
+            _frames.Pop();
+        }
     }
 
     public object? VisitGetExpr(Expr.Get expr)

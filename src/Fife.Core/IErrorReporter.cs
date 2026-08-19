@@ -14,6 +14,8 @@ public interface IErrorReporter
 
 public class ConsoleErrorReporter(TextWriter? writer = null) : IErrorReporter
 {
+    private const int MaxReportedFrames = 10;
+
     private readonly TextWriter _writer = writer ?? Console.Error;
 
     public bool HadError { get; private set; }
@@ -35,9 +37,28 @@ public class ConsoleErrorReporter(TextWriter? writer = null) : IErrorReporter
 
     public void RuntimeError(RuntimeError error)
     {
-        _writer.WriteLine($"{error.Message}\n[line {error.Token.Line}]");
+        _writer.WriteLine(error.Message);
+        _writer.WriteLine(FormatFrame(error.Token.Line, error.Frames is { Count: > 0 } f ? f[0].Name : "script"));
+
+        if (error.Frames is { Count: > 0 } frames)
+        {
+            var shown = Math.Min(frames.Count, MaxReportedFrames);
+            for (var i = 0; i < shown; i++)
+            {
+                var caller = i + 1 < frames.Count ? frames[i + 1].Name : "script";
+                _writer.WriteLine(FormatFrame(frames[i].CallSite.Line, caller));
+            }
+
+            if (frames.Count > shown)
+            {
+                _writer.WriteLine($"  ... {frames.Count - shown} more");
+            }
+        }
+
         HadRuntimeError = true;
     }
+
+    private static string FormatFrame(int line, string name) => $"[line {line}] in {name}";
 
     public void Reset()
     {

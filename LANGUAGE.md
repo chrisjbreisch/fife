@@ -236,6 +236,29 @@ program runs:
 Reading a property that is neither a field nor a method, or using property syntax on something
 that is not an instance, is a run-time error.
 
+## Errors
+
+A run-time error stops the program and prints the message followed by a call stack, innermost
+first. Each line gives the line number and the function that was executing there, with `script`
+standing for top-level code:
+
+```text
+Undefined property 'missing'.
+[line 3] in get
+[line 12] in inner
+[line 8] in outer
+[line 15] in script
+```
+
+Long stacks are truncated after ten frames.
+
+Calls may nest 100 deep. Exceeding that reports a stack overflow rather than crashing the host,
+so a runaway recursion produces an ordinary error:
+
+```text
+Stack overflow: exceeded the maximum call depth of 100.
+```
+
 ## Comments
 
 Line comments begin with `//`. Block comments use `/*` and `*/` and may be nested:
