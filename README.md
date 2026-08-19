@@ -32,6 +32,11 @@ dotnet run --project src/Fife.Cli                          # start the REPL
 See [LANGUAGE.md](LANGUAGE.md) for the types, operators, statement syntax, functions, classes,
 comments, and standard library reference.
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for planned exception handling, object protocols, indexing, and
+standard-library types.
+
 ## Extending it
 
 - **New native function**: `interpreter.DefineNative("sqrt", 1, (_, args) => Math.Sqrt((double)args[0]!));`
