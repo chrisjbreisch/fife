@@ -16,7 +16,8 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
     private enum ClassType
     {
         None,
-        Class
+        Class,
+        Subclass
     }
 
     private FunctionType _currentFunction = FunctionType.None;
@@ -90,6 +91,18 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         return null;
     }
 
+    public object? VisitSuperExpr(Expr.Super expr)
+    {
+        if (_currentClass == ClassType.None)
+            errors.Error(expr.Keyword, "Can't use 'super' outside of a class.");
+        else if (_currentClass != ClassType.Subclass)
+            errors.Error(expr.Keyword, "Can't use 'super' in a class with no superclass.");
+
+        ResolveLocal(expr, expr.Keyword);
+
+        return null;
+    }
+
     public object? VisitThisExpr(Expr.This expr)
     {
         if (_currentClass == ClassType.None)
@@ -139,6 +152,18 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         Declare(stmt.Name);
         Define(stmt.Name);
 
+        if (stmt.Superclass != null)
+        {
+            if (stmt.Superclass.Name.Lexeme == stmt.Name.Lexeme)
+                errors.Error(stmt.Superclass.Name, "A class can't inherit from itself.");
+
+            _currentClass = ClassType.Subclass;
+            Resolve(stmt.Superclass);
+
+            BeginScope();
+            _scopes.Peek()["super"] = true;
+        }
+
         BeginScope();
         _scopes.Peek()["this"] = true;
 
@@ -157,6 +182,8 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         }
 
         EndScope();
+
+        if (stmt.Superclass != null) EndScope();
 
         _currentClass = enclosing;
         return null;

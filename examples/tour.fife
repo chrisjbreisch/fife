@@ -45,5 +45,29 @@ var counter = makeCounter()
 writeln(counter())
 writeln(counter())
 
+// Classes and inheritance.
+class Animal {
+  Animal(name) {
+    this.name = name
+  }
+
+  speak() {
+    writeln(this.name + " makes a sound")
+  }
+}
+
+class Dog : Animal {
+  Dog(name) {
+    super.Animal(name)
+  }
+
+  speak() {
+    super.speak()
+    writeln(this.name + " barks")
+  }
+}
+
+Dog("Rex").speak()
+
 // Native functions provided by the host.
 writeln(clock())

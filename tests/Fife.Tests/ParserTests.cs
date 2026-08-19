@@ -74,9 +74,17 @@ public sealed class ParserTests
     public void ParsesClassDeclarations()
     {
         Assert.AreEqual(
-            "(class (var fun greet() (; (call writeln hi))))",
+            "(class Greeter (var fun greet() (; (call writeln hi))))",
             Print("class Greeter {\ngreet() {\nwriteln(\"hi\")\n}\n}\n"));
-        Assert.AreEqual("(class )", Print("class Empty {\n}\n"));
+        Assert.AreEqual("(class Empty )", Print("class Empty {\n}\n"));
+    }
+
+    [TestMethod]
+    public void ParsesClassInheritance()
+    {
+        Assert.AreEqual(
+            "(class Dog : Animal (var fun speak() (; (call (super speak)))))",
+            Print("class Dog : Animal {\nspeak() {\nsuper.speak()\n}\n}\n"));
     }
 
     [TestMethod]
@@ -91,7 +99,7 @@ public sealed class ParserTests
     public void ParsesThisInMethods()
     {
         Assert.AreEqual(
-            "(class (var fun get() (return (. this x))))",
+            "(class C (var fun get() (return (. this x))))",
             Print("class C {\nget() {\nreturn this.x\n}\n}\n"));
     }
 
@@ -99,7 +107,7 @@ public sealed class ParserTests
     public void ParsesTypedMethodDeclarations()
     {
         Assert.AreEqual(
-            "(class (int fun get(int n) (return n)))",
+            "(class C (int fun get(int n) (return n)))",
             Print("class C {\nint get(int n) {\nreturn n\n}\n}\n"));
     }
 

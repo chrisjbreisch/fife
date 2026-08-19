@@ -5,7 +5,7 @@ namespace Fife.Core;
 ///
 /// program     -> declaration* EOF
 /// declaration -> funDecl | varDecl | statement
-/// classDecl   -> "class" IDENTIFIER "{" ( type? function )* "}" 
+/// classDecl   -> "class" IDENTIFIER ( ":" IDENTIFIER )? "{" ( type? function )* "}" 
 /// funDecl     -> type? "fun" IDENTIFIER "(" parameters? ")" block
 /// varDecl     -> type IDENTIFIER ( "=" expression )? terminator
 /// parameters  -> type? IDENTIFIER ( "," type? IDENTIFIER )*
@@ -100,6 +100,14 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
     private Stmt.Class Class()
     {
         Token name = Consume(TokenType.Identifier, "Expect class name.");
+
+        Expr.Variable? superclass = null;
+        if (Match(TokenType.Colon))
+        {
+            Consume(TokenType.Identifier, "Expect superclass name after ':'.");
+            superclass = new Expr.Variable(Previous);
+        }
+
         Consume(TokenType.LeftBrace, "Expect '{' before class body.");
 
         List<Stmt.Function> methods = [];
@@ -114,7 +122,7 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
 
         Consume(TokenType.RightBrace, "Expect '}' after class body.");
 
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt.Function Function(string kind, FifeType returnType)
@@ -437,8 +445,15 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         if (Match(TokenType.True)) return new Expr.Literal(true);
         if (Match(TokenType.Nil)) return new Expr.Literal(null);
         if (Match(TokenType.Number, TokenType.String)) return new Expr.Literal(Previous.Literal);
-        if (Match(TokenType.This)) return new Expr.This(Previous);
-        if (Match(TokenType.Identifier)) return new Expr.Variable(Previous);
+        if (Match(TokenType.Super))
+        {
+            Token keyword = Previous;
+            Consume(TokenType.Dot, "Expect '.' after 'super'.");
+            Token method = Consume(TokenType.Identifier, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
+        }
+
+        if (Match(TokenType.This)) return new Expr.This(Previous);        if (Match(TokenType.Identifier)) return new Expr.Variable(Previous);
 
         if (Match(TokenType.LeftParen))
         {

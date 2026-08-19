@@ -236,6 +236,61 @@ program runs:
 Reading a property that is neither a field nor a method, or using property syntax on something
 that is not an instance, is a run-time error.
 
+## Inheritance
+
+A class may name a superclass after a colon. It inherits the superclass's methods and may
+override any of them:
+
+```fife
+class Animal {
+  Animal(name) {
+    this.name = name
+  }
+
+  speak() {
+    writeln(this.name + " makes a sound")
+  }
+}
+
+class Dog : Animal {
+  speak() {
+    writeln(this.name + " barks")
+  }
+}
+```
+
+Inside a subclass, `super.method(...)` calls the superclass's version, which is how an override
+extends rather than replaces behaviour:
+
+```fife
+class Dog : Animal {
+  speak() {
+    super.speak()
+    writeln(this.name + " barks")
+  }
+}
+```
+
+Because a constructor is named after its own class, constructors are not inherited. A subclass
+that needs the superclass's setup calls it by name:
+
+```fife
+class Dog : Animal {
+  Dog(name) {
+    super.Animal(name)
+    this.legs = 4
+  }
+}
+```
+
+A subclass without its own constructor takes no arguments. These mistakes are reported before the
+program runs:
+
+- Using `super` outside a class, or in a class with no superclass
+- Declaring a class that inherits from itself
+
+Naming a superclass that turns out not to be a class is a run-time error.
+
 ## Errors
 
 A run-time error stops the program and prints the message followed by a call stack, innermost

@@ -115,7 +115,21 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitClassStmt(Stmt.Class stmt)
     {
+        object? superclass = null;
+        if (stmt.Superclass != null)
+        {
+            superclass = Evaluate(stmt.Superclass);
+            if (superclass is not ClassDefinition)
+                throw new RuntimeError(stmt.Superclass.Name, "Superclass must be a class.");
+        }
+
         _environment.Define(stmt.Name.Lexeme, null);
+
+        if (stmt.Superclass != null)
+        {
+            _environment = new FifeEnvironment(_environment);
+            _environment.Define("super", superclass);
+        }
 
         Dictionary<string, FifeFunction> methods = [];
         foreach (var method in stmt.Methods)
@@ -124,7 +138,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             methods[method.Name.Lexeme] = function;
         }
 
-        var classDefinition = new ClassDefinition(stmt.Name.Lexeme, methods);
+        var classDefinition = new ClassDefinition(stmt.Name.Lexeme, (ClassDefinition?)superclass, methods);
+
+        if (stmt.Superclass != null) _environment = _environment.Enclosing!;
+
         _environment.Assign(stmt.Name, classDefinition);
 
         return null;
@@ -330,6 +347,18 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         instance.Set(expr.Name, value);
         return value;
 
+    }
+
+    public object? VisitSuperExpr(Expr.Super expr)
+    {
+        var distance = _locals[expr];
+        var superclass = (ClassDefinition)_environment.GetAt(distance, "super")!;
+        var instance = (ClassInstance)_environment.GetAt(distance - 1, "this")!;
+
+        var method = superclass.FindMethod(expr.Method.Lexeme)
+            ?? throw new RuntimeError(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.");
+
+        return method.Bind(instance);
     }
 
     public object? VisitThisExpr(Expr.This expr)

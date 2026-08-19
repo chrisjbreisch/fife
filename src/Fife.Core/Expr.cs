@@ -15,6 +15,7 @@ public abstract class Expr
         T VisitLogicalExpr(Logical expr);
         T VisitPostfixExpr(Postfix expr);
         T VisitSetExpr(Set expr);
+        T VisitSuperExpr(Super expr);
         T VisitThisExpr(This expr);
         T VisitUnaryExpr(Unary expr);
         T VisitVariableExpr(Variable expr);
@@ -86,8 +87,14 @@ public abstract class Expr
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitSetExpr(this);
     }
 
-    public sealed class This(Token keyword) : Expr
+    public sealed class Super(Token keyword, Token method) : Expr
     {
+        public Token Keyword { get; } = keyword;
+        public Token Method { get; } = method;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitSuperExpr(this);
+    }
+
+    public sealed class This(Token keyword) : Expr    {
         public Token Keyword { get; } = keyword;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitThisExpr(this);
     }

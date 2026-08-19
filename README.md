@@ -38,5 +38,5 @@ comments, and standard library reference.
 - **New syntax**: add a node to `Expr` or `Stmt` (plus its visitor method), parse it in `Parser`,
   then evaluate it in `Interpreter`. `AstPrinter` implements both visitors and will need the new
   method too, which keeps the compiler honest about missing cases.
-- **Next chapters from the book**: inheritance (`super`). The `Super` token type is already
-  scanned.
+- **Next chapters from the book**: complete. Classes and inheritance are implemented, with `:`
+  in place of the book's `<` for naming a superclass.

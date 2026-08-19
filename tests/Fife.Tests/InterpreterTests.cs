@@ -398,8 +398,99 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
-    public void ReportsACallStackForNestedCalls()
+    public void InheritsMethodsFromASuperclass()
     {
+        Assert.AreEqual("Rex makes a sound", Run(
+            "class Animal {\nAnimal(name) {\nthis.name = name\n}\nspeak() {\nwriteln(this.name + \" makes a sound\")\n}\n}\n"
+            + "class Dog : Animal {\nDog(name) {\nsuper.Animal(name)\n}\n}\nDog(\"Rex\").speak()\n"));
+    }
+
+    [TestMethod]
+    public void OverridesSuperclassMethodsAndCallsThemWithSuper()
+    {
+        Assert.AreEqual("base\nderived", Run(
+            "class A {\nspeak() {\nwriteln(\"base\")\n}\n}\n"
+            + "class B : A {\nspeak() {\nsuper.speak()\nwriteln(\"derived\")\n}\n}\nB().speak()\n"));
+    }
+
+    [TestMethod]
+    public void CallsTheSuperclassConstructorByName()
+    {
+        Assert.AreEqual("Rex\n4", Run(
+            "class Animal {\nAnimal(name) {\nthis.name = name\n}\n}\n"
+            + "class Dog : Animal {\nDog(name) {\nsuper.Animal(name)\nthis.legs = 4\n}\n}\n"
+            + "var d = Dog(\"Rex\")\nwriteln(d.name)\nwriteln(d.legs)\n"));
+    }
+
+    [TestMethod]
+    public void DoesNotInheritConstructors()
+    {
+        Assert.AreEqual("Cat instance", Run(
+            "class Animal {\nAnimal(name) {\nthis.name = name\n}\n}\nclass Cat : Animal {\n}\nwriteln(Cat())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsInheritingFromANonClass()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var notAClass = 1\nclass A : notAClass {\n}\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Superclass must be a class.");
+    }
+
+    [TestMethod]
+    public void ReportsSelfInheritance()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class A : A {\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "A class can't inherit from itself.");
+    }
+
+    [TestMethod]
+    public void ReportsSuperOutsideOfAClass()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("writeln(super.foo)\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't use 'super' outside of a class.");
+    }
+
+    [TestMethod]
+    public void ReportsSuperInAClassWithoutASuperclass()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class A {\nm() {\nreturn super.foo()\n}\n}\n");
+
+        Assert.IsTrue(engine.HadError);
+        StringAssert.Contains(output.ToString(), "Can't use 'super' in a class with no superclass.");
+    }
+
+    [TestMethod]
+    public void ReportsAnUndefinedSuperclassMethod()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class A {\n}\nclass B : A {\nm() {\nreturn super.nope()\n}\n}\nB().m()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Undefined property 'nope'.");
+    }
+
+    [TestMethod]
+    public void ReportsACallStackForNestedCalls()    {
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);

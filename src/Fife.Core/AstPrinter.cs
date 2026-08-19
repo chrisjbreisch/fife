@@ -27,7 +27,9 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitPostfixExpr(Expr.Postfix expr) => Parenthesize($"{expr.Operator.Lexeme} postfix", expr.Operand);
 
-    public string VisitSetExpr(Expr.Set expr) => Parenthesize($"=", expr.Object, expr.Name.Lexeme, expr.Value);    public string VisitThisExpr(Expr.This expr) => "this";
+    public string VisitSetExpr(Expr.Set expr) => Parenthesize($"=", expr.Object, expr.Name.Lexeme, expr.Value);    public string VisitSuperExpr(Expr.Super expr) => $"(super {expr.Method.Lexeme})";
+
+    public string VisitThisExpr(Expr.This expr) => "this";
 
     public string VisitUnaryExpr(Expr.Unary expr) => Parenthesize(expr.Operator.Lexeme, expr.Right);
 
@@ -35,7 +37,9 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitBlockStmt(Stmt.Block stmt) => $"(block {Print(stmt.Statements)})";
 
-    public string VisitClassStmt(Stmt.Class stmt) => $"(class {Print(stmt.Methods)})";
+    public string VisitClassStmt(Stmt.Class stmt) => stmt.Superclass is null
+        ? $"(class {stmt.Name.Lexeme} {Print(stmt.Methods)})"
+        : $"(class {stmt.Name.Lexeme} : {stmt.Superclass.Name.Lexeme} {Print(stmt.Methods)})";
 
     public string VisitExpressionStmt(Stmt.Expression stmt) => Parenthesize(";", stmt.Expr);
 

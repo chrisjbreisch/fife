@@ -59,6 +59,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
             case '-': AddToken(TokenType.Minus); break;
             case '+': AddToken(TokenType.Plus); break;
             case ';': AddToken(TokenType.Semicolon); break;
+            case ':': AddToken(TokenType.Colon); break;
             case '*': AddToken(TokenType.Star); break;
             case '^': AddToken(TokenType.Caret); break;
             case '!': AddToken(Match('=') ? TokenType.BangEqual : TokenType.Bang); break;
