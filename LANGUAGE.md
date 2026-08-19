@@ -271,8 +271,18 @@ class Dog : Animal {
 }
 ```
 
-Because a constructor is named after its own class, constructors are not inherited. A subclass
-that needs the superclass's setup calls it by name:
+Because a constructor is named after its own class, a subclass declares its own under its own
+name. A subclass that has none inherits the superclass's constructor, including its parameters:
+
+```fife
+class Cat : Animal {
+}
+
+Cat("Whiskers").speak() // Whiskers makes a sound
+```
+
+A subclass that declares a constructor does not chain to the superclass automatically. Call it
+explicitly by name, the same way you would call any other superclass method:
 
 ```fife
 class Dog : Animal {
@@ -283,8 +293,7 @@ class Dog : Animal {
 }
 ```
 
-A subclass without its own constructor takes no arguments. These mistakes are reported before the
-program runs:
+These mistakes are reported before the program runs:
 
 - Using `super` outside a class, or in a class with no superclass
 - Declaring a class that inherits from itself

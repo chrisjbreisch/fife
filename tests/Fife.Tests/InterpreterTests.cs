@@ -423,10 +423,29 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
-    public void DoesNotInheritConstructors()
+    public void InheritsTheSuperclassConstructor()
     {
-        Assert.AreEqual("Cat instance", Run(
-            "class Animal {\nAnimal(name) {\nthis.name = name\n}\n}\nclass Cat : Animal {\n}\nwriteln(Cat())\n"));
+        Assert.AreEqual("Whiskers", Run(
+            "class Animal {\nAnimal(name) {\nthis.name = name\n}\n}\nclass Cat : Animal {\n}\nwriteln(Cat(\"Whiskers\").name)\n"));
+    }
+
+    [TestMethod]
+    public void InheritsConstructorsThroughSeveralLevels()
+    {
+        Assert.AreEqual("7", Run(
+            "class A {\nA(x) {\nthis.x = x\n}\n}\nclass B : A {\n}\nclass C : B {\n}\nwriteln(C(7).x)\n"));
+    }
+
+    [TestMethod]
+    public void ChecksArityAgainstAnInheritedConstructor()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("class Animal {\nAnimal(name) {\nthis.name = name\n}\n}\nclass Cat : Animal {\n}\nCat()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Expected 1 arguments but got 0.");
     }
 
     [TestMethod]

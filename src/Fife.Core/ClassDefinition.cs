@@ -34,6 +34,8 @@ public sealed class ClassDefinition(
         return Methods.TryGetValue(name, out var method) ? method : Superclass?.FindMethod(name);
     }
 
-    /// <summary>Constructors are named after their class, so they are never inherited.</summary>
-    public FifeFunction? FindConstructor() => Methods.GetValueOrDefault(Name);
+    /// <summary>Each class looks for a constructor under its own name, so a subclass without one
+    /// falls back to its superclass's.</summary>
+    public FifeFunction? FindConstructor() =>
+        Methods.GetValueOrDefault(Name) ?? Superclass?.FindConstructor();
 }
