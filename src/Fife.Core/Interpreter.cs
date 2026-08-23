@@ -12,6 +12,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     private Dictionary<Expr, int> _locals = [];
     private ClassDefinition _exceptionClass = null!;
     private ClassDefinition _fileExceptionClass = null!;
+    private ClassDefinition _webExceptionClass = null!;
 
     public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
     {
@@ -35,6 +36,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     /// <summary>The token of the call currently being evaluated, for natives that need a location
     /// to report a constructor-time error against.</summary>
     public Token? CurrentCallSite => _frames.Count > 0 ? _frames.Peek().CallSite : null;
+
+    /// <summary>The built-in <c>WebException</c> class, for native objects (such as <see cref="FifeWebInstance"/>)
+    /// that need to raise a catchable exception via <see cref="CreateException"/>.</summary>
+    public ClassDefinition WebExceptionClass => _webExceptionClass;
 
     public void Interpret(List<Stmt> statements)
     {
@@ -130,6 +135,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             FifeVectorInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
         DefineNative("Matrix", 1, 255, (interpreter, arguments) =>
             FifeMatrixInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
+        DefineNative("Web", 0, (_, _) => new FifeWebInstance());
 
         DefineNative("pi", 0, (_, _) => Math.PI);
         DefineNative("sin", 1, (interpreter, arguments) =>
@@ -268,7 +274,8 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
         const string source =
             "class Exception {\n    Exception(message) {\n        this.message = message\n    }\n}\n"
-            + "class FileException : Exception {\n}\n";
+            + "class FileException : Exception {\n}\n"
+            + "class WebException : Exception {\n}\n";
 
         var reporter = new SilentErrorReporter();
         var tokens = new Scanner(source, reporter).ScanTokens();
@@ -284,6 +291,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
         _exceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "Exception", null, 0, 0))!;
         _fileExceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "FileException", null, 0, 0))!;
+        _webExceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "WebException", null, 0, 0))!;
     }
 
     /// <summary>Constructs an instance of a built-in exception class and wraps it for <c>throw</c>,

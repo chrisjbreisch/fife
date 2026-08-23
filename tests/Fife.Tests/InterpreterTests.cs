@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using Fife.Core;
 
 namespace Fife.Tests;
@@ -1467,6 +1470,181 @@ public sealed class InterpreterTests
         Assert.AreEqual(
             "Uncaught exception: boom\n[line 2] in inner\n[line 5] in outer\n[line 7] in script\n",
             output.ToString().ReplaceLineEndings("\n"));
+    }
+
+    /// <summary>Starts a one-shot local HTTP server, runs a fife script against it, and returns
+    /// the script's output. <paramref name="handler"/> handles exactly one request.</summary>
+    private static string RunAgainstLocalServer(Action<HttpListenerContext> handler, Func<string, string> buildSource)
+    {
+        var port = GetFreeTcpPort();
+        var baseUrl = $"http://localhost:{port}";
+        HttpListener listener = new();
+        listener.Prefixes.Add(baseUrl + "/");
+        listener.Start();
+
+        var serverTask = Task.Run(() => handler(listener.GetContext()));
+        try
+        {
+            var output = Run(buildSource(baseUrl));
+            serverTask.Wait(TimeSpan.FromSeconds(5));
+            return output;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private static int GetFreeTcpPort()
+    {
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
+    [TestMethod]
+    public void PerformsAGetRequest()
+    {
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                context.Response.StatusCode = 200;
+                var bytes = Encoding.UTF8.GetBytes("pong");
+                context.Response.OutputStream.Write(bytes);
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web()\nvar response = web.get(\"{baseUrl}/ping\")\n"
+                + "writeln(response.get(\"statusCode\"))\nwriteln(response.get(\"body\"))\nwriteln(response.get(\"success\"))\n");
+
+        Assert.AreEqual("200\npong\ntrue", output);
+    }
+
+    [TestMethod]
+    public void PerformsAPostRequestWithABody()
+    {
+        string? receivedMethod = null;
+        string? receivedBody = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                receivedMethod = context.Request.HttpMethod;
+                using (var reader = new StreamReader(context.Request.InputStream))
+                {
+                    receivedBody = reader.ReadToEnd();
+                }
+
+                context.Response.StatusCode = 201;
+                var bytes = Encoding.UTF8.GetBytes("created");
+                context.Response.OutputStream.Write(bytes);
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web()\nvar response = web.post(\"{baseUrl}/items\", \"name=widget\")\n"
+                + "writeln(response.get(\"statusCode\"))\nwriteln(response.get(\"body\"))\n");
+
+        Assert.AreEqual("201\ncreated", output);
+        Assert.AreEqual("POST", receivedMethod);
+        Assert.AreEqual("name=widget", receivedBody);
+    }
+
+    [TestMethod]
+    public void SendsCustomHeadersAndApiKeys()
+    {
+        string? apiKey = null;
+        string? customHeader = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                apiKey = context.Request.Headers["X-Api-Key"];
+                customHeader = context.Request.Headers["X-Custom"];
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web()\nweb.setApiKey(\"X-Api-Key\", \"secret-key\")\n"
+                + "web.setHeader(\"X-Custom\", \"hi\")\n"
+                + $"web.get(\"{baseUrl}/\")\n");
+
+        Assert.AreEqual("", output);
+        Assert.AreEqual("secret-key", apiKey);
+        Assert.AreEqual("hi", customHeader);
+    }
+
+    [TestMethod]
+    public void SendsABearerToken()
+    {
+        string? authorization = null;
+
+        RunAgainstLocalServer(
+            context =>
+            {
+                authorization = context.Request.Headers["Authorization"];
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl => $"var web = Web()\nweb.setBearerToken(\"my-jwt\")\nweb.get(\"{baseUrl}/\")\n");
+
+        Assert.AreEqual("Bearer my-jwt", authorization);
+    }
+
+    [TestMethod]
+    public void SendsBasicAuthCredentials()
+    {
+        string? authorization = null;
+
+        RunAgainstLocalServer(
+            context =>
+            {
+                authorization = context.Request.Headers["Authorization"];
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl => $"var web = Web()\nweb.setBasicAuth(\"user\", \"pass\")\nweb.get(\"{baseUrl}/\")\n");
+
+        var expected = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("user:pass"));
+        Assert.AreEqual(expected, authorization);
+    }
+
+    [TestMethod]
+    public void ReturnsNonSuccessStatusesWithoutThrowing()
+    {
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                context.Response.StatusCode = 404;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var response = Web().get(\"{baseUrl}/missing\")\n"
+                + "writeln(response.get(\"statusCode\"))\nwriteln(response.get(\"success\"))\n");
+
+        Assert.AreEqual("404\nfalse", output);
+    }
+
+    [TestMethod]
+    public void ReportsAFailedRequestAsACatchableWebException()
+    {
+        var port = GetFreeTcpPort();
+        Assert.AreEqual("caught", Run(
+            $"try {{\nWeb().get(\"http://localhost:{port}/\")\n"
+            + "} catch (Exception e) {\nwriteln(\"caught\")\n}\n"));
+    }
+
+    [TestMethod]
+    public void ReportsANonStringUrlArgumentToWebGet()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Web().get(1)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "'url' must be a string.");
     }
 }
 

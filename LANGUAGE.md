@@ -525,6 +525,56 @@ for (var i = 0; i < entries.length; i = i + 1) {
 }
 ```
 
+## Web
+
+`Web()` creates a native HTTP client. Requests run synchronously — there is no async support in
+fife, so the call blocks until the response arrives (or the request fails).
+
+```fife
+var web = Web()
+var response = web.get("https://example.com/api/users")
+writeln(response.get("statusCode"))   // 200
+writeln(response.get("success"))      // true
+writeln(response.get("body"))
+```
+
+- `get(url)` — sends a GET request.
+- `post(url)` / `post(url, body)` — sends a POST request, with an optional string body.
+- `put(url)` / `put(url, body)` — sends a PUT request.
+- `patch(url)` / `patch(url, body)` — sends a PATCH request.
+
+Each returns a `Map` with three entries: `statusCode` (an `int`), `body` (the response text as a
+`string`), and `success` (`true` for a 2xx status). A body, if given, is sent as
+`application/json`. A non-2xx response is returned normally, not thrown — only a request that
+never gets a response (host unreachable, connection refused, and so on) throws a `WebException`
+(a built-in subclass of `Exception`):
+
+```fife
+try {
+    web.get("https://unreachable.example.invalid")
+} catch (Exception e) {
+    writeln(e.message)
+}
+```
+
+Authentication is configured once and applies to every subsequent request on that `Web` instance:
+
+- `setHeader(name, value)` — sets an arbitrary header.
+- `setApiKey(header, key)` — sets a header carrying an API key (the header name varies by API,
+  commonly `X-Api-Key`).
+- `setBearerToken(token)` — sets `Authorization: Bearer <token>`, for JWTs and similar tokens.
+- `setBasicAuth(username, password)` — sets `Authorization: Basic <base64>` for username/password
+  auth.
+
+```fife
+var api = Web()
+api.setBearerToken(jwt)
+api.setHeader("Accept", "application/json")
+writeln(api.get("https://example.com/api/me").get("statusCode"))
+```
+
+`Web` has no settable fields.
+
 ### String members
 
 Strings expose members through the same `value.name` syntax used for class instances:
