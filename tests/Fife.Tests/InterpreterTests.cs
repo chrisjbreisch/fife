@@ -646,6 +646,154 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void CreatesAndPrintsAVector()
+    {
+        Assert.AreEqual("Vector[1, 2, 3]", Run("writeln(Vector(1, 2, 3))\n"));
+    }
+
+    [TestMethod]
+    public void ReadsAndWritesVectorElements()
+    {
+        Assert.AreEqual("1\n9\nVector[1, 9, 3]", Run(
+            "var v = Vector(1, 2, 3)\nwriteln(v.get(0))\nv.set(1, 9)\nwriteln(v[1])\nwriteln(v)\n"));
+    }
+
+    [TestMethod]
+    public void AddsAndSubtractsVectors()
+    {
+        Assert.AreEqual("Vector[4, 6]\nVector[-2, -2]", Run(
+            "writeln(Vector(1, 2).add(Vector(3, 4)))\nwriteln(Vector(1, 2).subtract(Vector(3, 4)))\n"));
+    }
+
+    [TestMethod]
+    public void MultipliesAVectorByAScalar()
+    {
+        Assert.AreEqual("Vector[2, 4]", Run("writeln(Vector(1, 2).multiply(2))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesTheDotProductOfTwoVectors()
+    {
+        Assert.AreEqual("32", Run("writeln(Vector(1, 2, 3).dot(Vector(4, 5, 6)))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesTheMagnitudeOfAVector()
+    {
+        Assert.AreEqual("5", Run("writeln(Vector(3, 4).magnitude())\n"));
+    }
+
+    [TestMethod]
+    public void NormalizesAVector()
+    {
+        Assert.AreEqual("Vector[0.6, 0.8]", Run("writeln(Vector(3, 4).normalize())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsNormalizingAZeroVector()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Vector(0, 0).normalize()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Can't normalize a zero vector.");
+    }
+
+    [TestMethod]
+    public void ReportsMismatchedVectorSizes()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Vector(1, 2).add(Vector(1, 2, 3))\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Expected a Vector of length 2.");
+    }
+
+    [TestMethod]
+    public void CreatesAndPrintsAMatrix()
+    {
+        Assert.AreEqual("Matrix[[1, 2], [3, 4]]\n2\n2", Run(
+            "var m = Matrix(List(1, 2), List(3, 4))\n"
+            + "writeln(m)\nwriteln(m.rows)\nwriteln(m.columns)\n"));
+    }
+
+    [TestMethod]
+    public void ReadsAndWritesMatrixElements()
+    {
+        Assert.AreEqual("2\nMatrix[[1, 9], [3, 4]]", Run(
+            "var m = Matrix(List(1, 2), List(3, 4))\n"
+            + "writeln(m.get(0, 1))\nm.set(0, 1, 9)\nwriteln(m)\n"));
+    }
+
+    [TestMethod]
+    public void AddsAndSubtractsMatrices()
+    {
+        Assert.AreEqual("Matrix[[6, 8], [10, 12]]\nMatrix[[-4, -4], [-4, -4]]", Run(
+            "var a = Matrix(List(1, 2), List(3, 4))\nvar b = Matrix(List(5, 6), List(7, 8))\n"
+            + "writeln(a.add(b))\nwriteln(a.subtract(b))\n"));
+    }
+
+    [TestMethod]
+    public void MultipliesAMatrixByAScalarMatrixAndVector()
+    {
+        Assert.AreEqual("Matrix[[2, 4], [6, 8]]\nMatrix[[19, 22], [43, 50]]\nVector[3, 7]", Run(
+            "var a = Matrix(List(1, 2), List(3, 4))\nvar b = Matrix(List(5, 6), List(7, 8))\n"
+            + "writeln(a.multiply(2))\nwriteln(a.multiply(b))\nwriteln(a.multiply(Vector(1, 1)))\n"));
+    }
+
+    [TestMethod]
+    public void TransposesAMatrix()
+    {
+        Assert.AreEqual("Matrix[[1, 3], [2, 4]]", Run("writeln(Matrix(List(1, 2), List(3, 4)).transpose())\n"));
+    }
+
+    [TestMethod]
+    public void ComputesTheDeterminantOfASquareMatrix()
+    {
+        Assert.AreEqual("-2", Run("writeln(Matrix(List(1, 2), List(3, 4)).determinant())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsTheDeterminantOfANonSquareMatrix()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Matrix(List(1, 2, 3), List(4, 5, 6)).determinant()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Determinant requires a square Matrix.");
+    }
+
+    [TestMethod]
+    public void ReportsMismatchedMatrixRowLengths()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Matrix(List(1, 2), List(3))\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "All Matrix rows must have the same length.");
+    }
+
+    [TestMethod]
+    public void ReportsANonListMatrixRow()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("Matrix(1, 2)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Each Matrix row must be a List of numbers.");
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

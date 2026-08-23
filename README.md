@@ -18,6 +18,9 @@ Robert Nystrom's [Crafting Interpreters](https://craftinginterpreters.com/).
 binds each variable reference to its declaring scope before execution. All diagnostics flow through
 `IErrorReporter`, so a host can capture errors instead of writing to the console.
 
+`Vector` and `Matrix` are backed by [MathNet.Numerics](https://numerics.mathdotnet.com/), a
+dependency of `src/Fife.Core`.
+
 ## Build and run
 
 ```pwsh
@@ -34,7 +37,7 @@ exceptions, comments, and standard library reference.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for planned indexing and standard-library types.
+See [ROADMAP.md](ROADMAP.md) for the remaining open decision on operator dispatch.
 
 ## Extending it
 

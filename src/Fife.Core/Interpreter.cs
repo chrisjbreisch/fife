@@ -31,6 +31,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public TextReader Input { get; }
 
+    /// <summary>The token of the call currently being evaluated, for natives that need a location
+    /// to report a constructor-time error against.</summary>
+    public Token? CurrentCallSite => _frames.Count > 0 ? _frames.Peek().CallSite : null;
+
     public void Interpret(List<Stmt> statements)
     {
         try
@@ -121,6 +125,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         DefineNative("Stack", 0, 255, (_, arguments) => new FifeStackInstance(arguments));
         DefineNative("Queue", 0, 255, (_, arguments) => new FifeQueueInstance(arguments));
         DefineNative("Map", 0, (_, _) => new FifeMapInstance());
+        DefineNative("Vector", 0, 255, (interpreter, arguments) =>
+            FifeVectorInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
+        DefineNative("Matrix", 1, 255, (interpreter, arguments) =>
+            FifeMatrixInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
     }
 
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)

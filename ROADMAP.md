@@ -1,7 +1,8 @@
 # Fife Roadmap
 
-This roadmap captures the next language and standard-library work after classes, inheritance,
-call-stack tracing, and exception handling.
+This roadmap captures the language and standard-library work done after classes, inheritance,
+call-stack tracing, and exception handling. As of 2026-08-23, every planned item below is
+complete; the file is kept as a record of what was decided and why.
 
 ## Design Principles
 
@@ -21,21 +22,18 @@ Implement native-backed objects using the host object protocol:
 - `Stack` — done; see Completed Foundations.
 - `Queue` — done; see Completed Foundations.
 - `Map` — done; see Completed Foundations.
-- `Matrix`
-- `Vector`
+- `Vector` — done; see Completed Foundations.
+- `Matrix` — done; see Completed Foundations.
 
 Each type should have focused behavior tests and documented construction, member, and error
 semantics. Standard-library failures should use the exception system where recovery is useful.
 
-## 2. Operator Dispatch Decision
+## Operator Dispatch Decision (resolved)
 
-Decide how objects participate in operators before adding substantial matrix/vector APIs:
-
-- Keep operations as named methods such as `vector.add(other)`; or
-- Add operator dispatch for native/class objects.
-
-The current `+` implementation handles numbers and strings directly. Operator dispatch is more
-expressive for vectors and matrices, but it increases complexity around type annotations and
+Decided 2026-08-23, when `Vector`/`Matrix` were implemented: named methods only (`vector.add(w)`,
+`matrix.multiply(other)`), not `+`/`-`/`*` operator overloading. `VisitBinaryExpr` still only
+handles numbers and strings directly; no operator-dispatch machinery was added. Revisit only if a
+concrete need for `v + w` syntax outweighs the added complexity around type annotations and
 runtime errors.
 
 ## Completed Foundations
@@ -65,6 +63,12 @@ runtime errors.
 - A native `Map` type (`FifeMapInstance`), backed by a real `Dictionary<object, object?>` and
   implementing both `IFifeObject` and `IFifeIndexable`, with
   `length`/`get`/`set`/`containsKey`/`remove`/`keys()`/`values()` (the latter two return `List`s)
+- Native `Vector` and `Matrix` types, backed by
+  [MathNet.Numerics](https://numerics.mathdotnet.com/) (`MathNet.Numerics.LinearAlgebra.Vector<double>`
+  / `Matrix<double>`). `Vector` implements `IFifeIndexable`; `Matrix` does not, since it needs two
+  indices and `[...]` only supports one — use `get(row, column)`/`set(row, column, value)`
+  instead. Arithmetic is named methods only (`add`, `subtract`, `multiply`), not operators — see
+  "Operator Dispatch Decision" above.
 
 ## Deliberately Deferred
 
@@ -73,3 +77,5 @@ runtime errors.
 - A large C#-style exception catalog
 - Function overloading
 - `void` / `FifeType.None`
+- `+`/`-`/`*` operator overloading on `Vector`/`Matrix` (or any native/class object) — see
+  "Operator Dispatch Decision" above

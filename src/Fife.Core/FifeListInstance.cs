@@ -5,6 +5,8 @@ public sealed class FifeListInstance(IEnumerable<object?> items) : IFifeObject, 
 {
     private readonly List<object?> _items = [.. items];
 
+    public IReadOnlyList<object?> Items => _items;
+
     public override string ToString() => $"[{string.Join(", ", _items.Select(Interpreter.Stringify))}]";
 
     public object? Get(Token name) => name.Lexeme switch

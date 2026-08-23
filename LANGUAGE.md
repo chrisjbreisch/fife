@@ -586,3 +586,53 @@ writeln(ages.length)       // 2
 
 `[...]` indexing is equivalent to `get`/`set`. Assigning `nil` as a key, or reading a key that
 isn't present, is a run-time error. Maps have no settable fields.
+
+## Vectors and Matrices
+
+`Vector(...)` and `Matrix(...)` are native, numeric types backed by
+[MathNet.Numerics](https://numerics.mathdotnet.com/). They support named methods rather than
+arithmetic operators — `v.add(w)`, not `v + w`.
+
+```fife
+var v = Vector(1, 2, 3)
+writeln(v)              // Vector[1, 2, 3]
+writeln(v.length)        // 3
+writeln(v.get(0))        // 1
+v.set(0, 9)
+writeln(v[0])             // 9 - [...] is equivalent to get/set
+```
+
+Vector members:
+
+- `length` — the number of elements, as an `int`.
+- `get(index)` / `set(index, value)`, and equivalent `[...]` indexing.
+- `add(other)` / `subtract(other)` — element-wise; `other` must be a `Vector` of the same length.
+- `multiply(scalar)` — scales every element by a number.
+- `dot(other)` — the dot product with another `Vector` of the same length.
+- `magnitude()` — the Euclidean (L2) norm.
+- `normalize()` — a unit-length copy; a run-time error on a zero vector.
+
+```fife
+var m = Matrix(List(1, 2), List(3, 4))
+writeln(m)              // Matrix[[1, 2], [3, 4]]
+writeln(m.rows)          // 2
+writeln(m.columns)       // 2
+writeln(m.get(0, 1))     // 2
+m.set(0, 1, 9)
+```
+
+`Matrix(...)` takes one `List` argument per row; every row must be the same length. There's no
+`[...]` indexing for matrices (only a single index is supported today), so use `get`/`set` with
+both a row and a column.
+
+Matrix members:
+
+- `rows` / `columns` — dimensions, as `int`s.
+- `get(row, column)` / `set(row, column, value)`.
+- `add(other)` / `subtract(other)` — `other` must be a `Matrix` of the same dimensions.
+- `multiply(other)` — scales by a number, multiplies by another `Matrix` (dimensions must agree),
+  or multiplies by a `Vector` (returns a `Vector`).
+- `transpose()` — a new, transposed `Matrix`.
+- `determinant()` — a run-time error unless the `Matrix` is square.
+
+Vectors and matrices have no settable fields other than through `set`/`[...]`.
