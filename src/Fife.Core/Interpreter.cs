@@ -205,6 +205,49 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         });
         DefineNative("fileExists", 1, (interpreter, arguments) =>
             File.Exists(RequireString(arguments[0], interpreter.CurrentCallSite!, "fileExists")));
+        DefineNative("directoryExists", 1, (interpreter, arguments) =>
+            Directory.Exists(RequireString(arguments[0], interpreter.CurrentCallSite!, "directoryExists")));
+        DefineNative("fileSize", 1, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "fileSize");
+            try
+            {
+                return (double)new FileInfo(path).Length;
+            }
+            catch (FileNotFoundException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or DirectoryNotFoundException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't access '{path}': {ex.Message}");
+            }
+        });
+        DefineNative("fileModifiedTime", 1, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "fileModifiedTime");
+            if (!File.Exists(path))
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
+
+            return (double)new DateTimeOffset(File.GetLastWriteTimeUtc(path)).ToUnixTimeSeconds();
+        });
+        DefineNative("listDirectory", 1, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "listDirectory");
+            try
+            {
+                var entries = Directory.EnumerateFileSystemEntries(path).Select(entry => (object?)Path.GetFileName(entry));
+                return new FifeListInstance(entries);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Directory not found: '{path}'.");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't access '{path}': {ex.Message}");
+            }
+        });
     }
 
     private static double RequireNumber(object? argument, Token token, string function) =>

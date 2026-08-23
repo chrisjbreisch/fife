@@ -70,8 +70,9 @@ runtime errors.
   instead. Arithmetic is named methods only (`add`, `subtract`, `multiply`), not operators — see
   "Operator Dispatch Decision" above.
 - A built-in `FileException : Exception` (first real subclass, bootstrapped alongside `Exception`
-  itself) and file I/O standard-library functions: `readFile`/`writeFile`/`appendFile`/
-  `fileExists`. File failures throw a catchable `FileException` via a new general-purpose
+  itself) and file/directory standard-library functions: `readFile`/`writeFile`/`appendFile`/
+  `fileExists`/`fileSize`/`fileModifiedTime`/`directoryExists`/`listDirectory`. File and directory
+  failures throw a catchable `FileException` via a general-purpose
   `Interpreter.CreateException(ClassDefinition, Token, string)` helper, instead of an uncatchable
   `RuntimeError` — the first stdlib functions to use catchable exceptions rather than `RuntimeError`.
 

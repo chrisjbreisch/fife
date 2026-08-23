@@ -926,6 +926,78 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ReportsTheSizeOfAFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        try
+        {
+            Assert.AreEqual("5", Run($"writeFile(\"{path}\", \"hello\")\nwriteln(fileSize(\"{path}\"))\n"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void ReportsFileSizeForAMissingFileAsAFileException()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-missing-{Guid.NewGuid():N}.txt");
+        Assert.AreEqual("caught: File not found: " + $"'{path}'.", Run(
+            $"try {{\nfileSize(\"{path}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+    }
+
+    [TestMethod]
+    public void ReportsTheModifiedTimeOfAFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        try
+        {
+            Assert.AreEqual("true", Run(
+                $"writeFile(\"{path}\", \"hi\")\nwriteln(fileModifiedTime(\"{path}\") > 0)\n"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void ChecksWhetherADirectoryExists()
+    {
+        Assert.AreEqual("true\nfalse", Run(
+            $"writeln(directoryExists(\"{Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar)}\"))\n"
+            + "writeln(directoryExists(\"no-such-directory-should-exist\"))\n"));
+    }
+
+    [TestMethod]
+    public void ListsTheContentsOfADirectory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fife-test-dir-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var filePath = Path.Combine(directory, "a.txt");
+        try
+        {
+            Assert.AreEqual("1\ntrue", Run(
+                $"writeFile(\"{filePath}\", \"hi\")\n"
+                + $"var entries = listDirectory(\"{directory}\")\n"
+                + "writeln(entries.length)\nwriteln(entries.contains(\"a.txt\"))\n"));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [TestMethod]
+    public void ReportsListingAMissingDirectoryAsAFileException()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"fife-test-missing-dir-{Guid.NewGuid():N}");
+        Assert.AreEqual("caught: Directory not found: " + $"'{directory}'.", Run(
+            $"try {{\nlistDirectory(\"{directory}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

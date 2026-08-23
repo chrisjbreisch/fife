@@ -496,6 +496,35 @@ try {
 
 Returns whether a file exists at `path`, without throwing.
 
+### `fileSize(path)`
+
+Returns the size of a file in bytes. Throws `FileException` if the file doesn't exist.
+
+### `fileModifiedTime(path)`
+
+Returns the file's last-modified time as a Unix timestamp in seconds, the same format `clock()`
+uses. Throws `FileException` if the file doesn't exist.
+
+### `directoryExists(path)`
+
+Returns whether a directory exists at `path`, without throwing.
+
+### `listDirectory(path)`
+
+Returns a `List` of the names of the files and subdirectories directly inside `path`. Throws
+`FileException` if the directory doesn't exist.
+
+```fife
+writeln(fileSize("notes.txt"))            // 11
+writeln(fileModifiedTime("notes.txt") > 0) // true
+writeln(directoryExists("."))              // true
+
+var entries = listDirectory(".")
+for (var i = 0; i < entries.length; i = i + 1) {
+    writeln(entries.get(i))
+}
+```
+
 ### String members
 
 Strings expose members through the same `value.name` syntax used for class instances:
