@@ -1646,5 +1646,83 @@ public sealed class InterpreterTests
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "'url' must be a string.");
     }
+
+    [TestMethod]
+    public void PerformsADeleteRequest()
+    {
+        string? receivedMethod = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                receivedMethod = context.Request.HttpMethod;
+                context.Response.StatusCode = 204;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var response = Web().delete(\"{baseUrl}/items/1\")\nwriteln(response.get(\"statusCode\"))\n");
+
+        Assert.AreEqual("204", output);
+        Assert.AreEqual("DELETE", receivedMethod);
+    }
+
+    [TestMethod]
+    public void ResolvesRelativeUrlsAgainstABaseUrlSetInTheConstructor()
+    {
+        string? requestedPath = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                requestedPath = context.Request.Url!.AbsolutePath;
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web(\"{baseUrl}/\")\nvar response = web.get(\"users/1\")\nwriteln(response.get(\"statusCode\"))\n");
+
+        Assert.AreEqual("200", output);
+        Assert.AreEqual("/users/1", requestedPath);
+    }
+
+    [TestMethod]
+    public void ResolvesRelativeUrlsAgainstABaseUrlSetWithSetBaseUrl()
+    {
+        string? requestedPath = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                requestedPath = context.Request.Url!.AbsolutePath;
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web()\nweb.setBaseUrl(\"{baseUrl}/\")\nvar response = web.get(\"users/1\")\n"
+                + "writeln(response.get(\"statusCode\"))\n");
+
+        Assert.AreEqual("200", output);
+        Assert.AreEqual("/users/1", requestedPath);
+    }
+
+    [TestMethod]
+    public void UsesAnAbsoluteUrlEvenWhenABaseUrlIsSet()
+    {
+        string? requestedPath = null;
+
+        var output = RunAgainstLocalServer(
+            context =>
+            {
+                requestedPath = context.Request.Url!.AbsolutePath;
+                context.Response.StatusCode = 200;
+                context.Response.Close();
+            },
+            baseUrl =>
+                $"var web = Web(\"https://ignored.example.invalid/\")\n"
+                + $"var response = web.get(\"{baseUrl}/direct\")\nwriteln(response.get(\"statusCode\"))\n");
+
+        Assert.AreEqual("200", output);
+        Assert.AreEqual("/direct", requestedPath);
+    }
 }
 

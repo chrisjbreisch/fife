@@ -75,12 +75,14 @@ runtime errors.
   failures throw a catchable `FileException` via a general-purpose
   `Interpreter.CreateException(ClassDefinition, Token, string)` helper, instead of an uncatchable
   `RuntimeError` — the first stdlib functions to use catchable exceptions rather than `RuntimeError`.
-- A native `Web` type (`FifeWebInstance`), a synchronous HTTP client (`get`/`post`/`put`/`patch`,
-  a `Map` response with `statusCode`/`body`/`success`) with `setHeader`/`setApiKey`/
-  `setBearerToken`/`setBasicAuth` for authentication. Backed by a shared static `HttpClient`, using
-  its synchronous `Send` API (available since .NET 5) rather than blocking on async calls. A
-  non-2xx response is not an error; only a transport-level failure throws a catchable
-  `WebException : Exception`, bootstrapped the same way as `FileException`.
+- A native `Web` type (`FifeWebInstance`), a synchronous HTTP client
+  (`get`/`post`/`put`/`patch`/`delete`, a `Map` response with `statusCode`/`body`/`success`) with
+  `setHeader`/`setApiKey`/`setBearerToken`/`setBasicAuth` for authentication, plus `Web(baseUrl)`/
+  `setBaseUrl(url)` so relative paths resolve against a configured base (an absolute URL always
+  passes through unchanged). Backed by a shared static `HttpClient`, using its synchronous `Send`
+  API (available since .NET 5) rather than blocking on async calls. A non-2xx response is not an
+  error; only a transport-level failure throws a catchable `WebException : Exception`,
+  bootstrapped the same way as `FileException`.
 
 ## Deliberately Deferred
 

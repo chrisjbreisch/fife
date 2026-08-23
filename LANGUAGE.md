@@ -542,6 +542,7 @@ writeln(response.get("body"))
 - `post(url)` / `post(url, body)` — sends a POST request, with an optional string body.
 - `put(url)` / `put(url, body)` — sends a PUT request.
 - `patch(url)` / `patch(url, body)` — sends a PATCH request.
+- `delete(url)` / `delete(url, body)` — sends a DELETE request.
 
 Each returns a `Map` with three entries: `statusCode` (an `int`), `body` (the response text as a
 `string`), and `success` (`true` for a 2xx status). A body, if given, is sent as
@@ -556,6 +557,21 @@ try {
     writeln(e.message)
 }
 ```
+
+### Base URL
+
+`Web(baseUrl)` — or `setBaseUrl(url)` after construction — sets a base URL that relative paths are
+resolved against, so requests only need to name the path:
+
+```fife
+var api = Web("https://example.com/api/")
+writeln(api.get("users/1").get("statusCode"))   // resolves to https://example.com/api/users/1
+```
+
+A URL that is already absolute (starts with a scheme like `http://` or `https://`) is used as-is,
+ignoring the base URL. An invalid base URL is a run-time error.
+
+### Authentication
 
 Authentication is configured once and applies to every subsequent request on that `Web` instance:
 

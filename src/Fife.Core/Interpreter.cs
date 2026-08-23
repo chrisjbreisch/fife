@@ -135,7 +135,9 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             FifeVectorInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
         DefineNative("Matrix", 1, 255, (interpreter, arguments) =>
             FifeMatrixInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
-        DefineNative("Web", 0, (_, _) => new FifeWebInstance());
+        DefineNative("Web", 0, 1, (interpreter, arguments) => arguments.Count == 1
+            ? new FifeWebInstance(RequireString(arguments[0], interpreter.CurrentCallSite!, "Web"))
+            : new FifeWebInstance());
 
         DefineNative("pi", 0, (_, _) => Math.PI);
         DefineNative("sin", 1, (interpreter, arguments) =>
