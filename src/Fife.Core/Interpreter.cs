@@ -11,6 +11,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     private readonly Stack<CallFrame> _frames = new();
     private Dictionary<Expr, int> _locals = [];
     private ClassDefinition _exceptionClass = null!;
+    private ClassDefinition _fileExceptionClass = null!;
 
     public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
     {
@@ -157,21 +158,74 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
                 ? Math.Log(value, RequireNumber(arguments[1], interpreter.CurrentCallSite!, "log"))
                 : Math.Log(value);
         });
+
+        DefineNative("readFile", 1, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "readFile");
+            try
+            {
+                return File.ReadAllText(path);
+            }
+            catch (FileNotFoundException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't read '{path}': {ex.Message}");
+            }
+        });
+        DefineNative("writeFile", 2, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "writeFile");
+            var content = RequireString(arguments[1], interpreter.CurrentCallSite!, "writeFile");
+            try
+            {
+                File.WriteAllText(path, content);
+                return null;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't write '{path}': {ex.Message}");
+            }
+        });
+        DefineNative("appendFile", 2, (interpreter, arguments) =>
+        {
+            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "appendFile");
+            var content = RequireString(arguments[1], interpreter.CurrentCallSite!, "appendFile");
+            try
+            {
+                File.AppendAllText(path, content);
+                return null;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't write '{path}': {ex.Message}");
+            }
+        });
+        DefineNative("fileExists", 1, (interpreter, arguments) =>
+            File.Exists(RequireString(arguments[0], interpreter.CurrentCallSite!, "fileExists")));
     }
 
     private static double RequireNumber(object? argument, Token token, string function) =>
         argument is double number ? number : throw new RuntimeError(token, $"{function}() expects a number.");
+
+    private static string RequireString(object? argument, Token token, string function) =>
+        argument as string ?? throw new RuntimeError(token, $"{function}() expects a string.");
 
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)
     {
         if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
     }
 
-    /// <summary>Defines the built-in <c>Exception</c> class by running fife source through the
-    /// normal scan/parse/resolve pipeline, so user classes can inherit from it like any other.</summary>
+    /// <summary>Defines the built-in <c>Exception</c> class (and its <c>FileException</c>
+    /// subclass) by running fife source through the normal scan/parse/resolve pipeline, so user
+    /// classes can inherit from them like any other.</summary>
     private void DefineBuiltInExceptionClass()
     {
-        const string source = "class Exception {\n    Exception(message) {\n        this.message = message\n    }\n}\n";
+        const string source =
+            "class Exception {\n    Exception(message) {\n        this.message = message\n    }\n}\n"
+            + "class FileException : Exception {\n}\n";
 
         var reporter = new SilentErrorReporter();
         var tokens = new Scanner(source, reporter).ScanTokens();
@@ -186,6 +240,16 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         foreach (var statement in statements) Execute(statement);
 
         _exceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "Exception", null, 0, 0))!;
+        _fileExceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "FileException", null, 0, 0))!;
+    }
+
+    /// <summary>Constructs an instance of a built-in exception class and wraps it for <c>throw</c>,
+    /// so native code can raise a catchable fife exception instead of an uncatchable
+    /// <see cref="RuntimeError"/>.</summary>
+    public FifeThrow CreateException(ClassDefinition exceptionClass, Token token, string message)
+    {
+        var instance = (ClassInstance)exceptionClass.Call(this, [message])!;
+        return new FifeThrow(token, instance);
     }
 
     private void Execute(Stmt statement) => statement.Accept(this);

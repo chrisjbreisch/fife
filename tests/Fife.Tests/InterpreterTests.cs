@@ -862,6 +862,70 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void WritesAndReadsAFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        try
+        {
+            Assert.AreEqual("hello", Run($"writeFile(\"{path}\", \"hello\")\nwriteln(readFile(\"{path}\"))\n"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void AppendsToAFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        try
+        {
+            Assert.AreEqual("hello world", Run(
+                $"writeFile(\"{path}\", \"hello\")\nappendFile(\"{path}\", \" world\")\nwriteln(readFile(\"{path}\"))\n"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void ChecksWhetherAFileExists()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        try
+        {
+            Assert.AreEqual("false\ntrue", Run(
+                $"writeln(fileExists(\"{path}\"))\nwriteFile(\"{path}\", \"hi\")\nwriteln(fileExists(\"{path}\"))\n"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void CatchesAMissingFileAsAFileException()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-missing-{Guid.NewGuid():N}.txt");
+        Assert.AreEqual("caught: File not found: " + $"'{path}'.", Run(
+            $"try {{\nreadFile(\"{path}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+    }
+
+    [TestMethod]
+    public void ReportsANonStringArgumentToReadFile()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("readFile(1)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "readFile() expects a string.");
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

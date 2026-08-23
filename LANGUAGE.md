@@ -333,15 +333,18 @@ The catch type matches the thrown value's class or any of its superclasses, so c
 inherit from `Exception` the same way any other class inherits from a superclass:
 
 ```fife
-class FileException : Exception {
+class InvalidInputException : Exception {
 }
 
 try {
-    throw FileException("file not found")
+    throw InvalidInputException("age must be positive")
 } catch (Exception e) {
     writeln(e.message)
 }
 ```
+
+Fife also has one built-in subclass, `FileException`, thrown by the file functions in the
+standard library (`readFile`, `writeFile`, `appendFile`) — see below.
 
 An exception that no enclosing `catch` matches stops the program and is reported the same way
 other run-time errors are. `try` does not yet support `finally`.
@@ -465,6 +468,33 @@ given `base` instead. There is no separate `sqrt`/`pow` — use `^` and `log`/`e
 writeln(log(exp(1)))     // 1
 writeln(log(8, 2))       // 3
 ```
+
+### `readFile(path)`, `writeFile(path, content)`, `appendFile(path, content)`
+
+Read a whole file as a string, write a string to a file (overwriting it), or append a string to
+a file (creating it if it doesn't exist).
+
+```fife
+writeFile("notes.txt", "hello")
+appendFile("notes.txt", " world")
+writeln(readFile("notes.txt"))   // hello world
+```
+
+A failure — the file doesn't exist, a directory is missing, permissions are denied, and so on —
+throws a `FileException` (a built-in subclass of `Exception`), so it can be caught like any other
+fife exception:
+
+```fife
+try {
+    readFile("missing.txt")
+} catch (Exception e) {
+    writeln(e.message)
+}
+```
+
+### `fileExists(path)`
+
+Returns whether a file exists at `path`, without throwing.
 
 ### String members
 
