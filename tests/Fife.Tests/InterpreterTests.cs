@@ -651,4 +651,66 @@ public sealed class InterpreterTests
 
         Assert.IsTrue(engine.HadError);
     }
+
+    [TestMethod]
+    public void CatchesAThrownBuiltInException()
+    {
+        Assert.AreEqual("boom", Run(
+            "try {\nthrow Exception(\"boom\")\n} catch (Exception e) {\nwriteln(e.message)\n}\n"));
+    }
+
+    [TestMethod]
+    public void CatchesAThrownUserDefinedExceptionSubclass()
+    {
+        Assert.AreEqual("file not found", Run(
+            "class FileException : Exception {\n}\n"
+            + "try {\nthrow FileException(\"file not found\")\n} catch (Exception e) {\nwriteln(e.message)\n}\n"));
+    }
+
+    [TestMethod]
+    public void RunsCodeAfterATryCatchWhenNoExceptionIsThrown()
+    {
+        Assert.AreEqual("ok\nafter", Run(
+            "try {\nwriteln(\"ok\")\n} catch (Exception e) {\nwriteln(\"never\")\n}\nwriteln(\"after\")\n"));
+    }
+
+    [TestMethod]
+    public void LetsAnUnmatchedExceptionTypePropagate()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run(
+            "class FileException : Exception {\n}\n"
+            + "class OtherException : Exception {\n}\n"
+            + "try {\nthrow FileException(\"nope\")\n} catch (OtherException e) {\nwriteln(\"never\")\n}\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Uncaught exception: nope");
+    }
+
+    [TestMethod]
+    public void ReportsThrowingANonExceptionValue()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("throw 1\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Can only throw instances of Exception or a subclass.");
+    }
+
+    [TestMethod]
+    public void ReportsAnUncaughtExceptionAtTopLevel()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("throw Exception(\"boom\")\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Uncaught exception: boom");
+    }
 }
+

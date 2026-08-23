@@ -12,6 +12,8 @@ public abstract class Stmt
         T VisitFunctionStmt(Function stmt);
         T VisitIfStmt(If stmt);
         T VisitReturnStmt(Return stmt);
+        T VisitThrowStmt(Throw stmt);
+        T VisitTryStmt(Try stmt);
         T VisitVarStmt(Var stmt);
         T VisitWhileStmt(While stmt);
     }
@@ -56,6 +58,22 @@ public abstract class Stmt
         public Token Keyword { get; } = keyword;
         public Expr? Value { get; } = value;
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitReturnStmt(this);
+    }
+
+    public sealed class Throw(Token keyword, Expr value) : Stmt
+    {
+        public Token Keyword { get; } = keyword;
+        public Expr Value { get; } = value;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitThrowStmt(this);
+    }
+
+    public sealed class Try(List<Stmt> tryBlock, Expr.Variable catchType, Token catchName, List<Stmt> catchBlock) : Stmt
+    {
+        public List<Stmt> TryBlock { get; } = tryBlock;
+        public Expr.Variable CatchType { get; } = catchType;
+        public Token CatchName { get; } = catchName;
+        public List<Stmt> CatchBlock { get; } = catchBlock;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitTryStmt(this);
     }
 
     public sealed class Var(Token name, Expr? initializer, FifeType type = FifeType.Dynamic) : Stmt

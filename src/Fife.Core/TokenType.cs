@@ -18,6 +18,7 @@ public enum TokenType
     // Keywords.
     And, Class, Else, False, Fun, For, If, Nil, Or,
     Bool, Float, Int, Return, Super, This, True, Var, While,
+    Throw, Try, Catch,
 
     Eof
 }

@@ -38,6 +38,16 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansThrowTryAndCatchKeywords()
+    {
+        var tokens = Scan("throw try catch");
+
+        CollectionAssert.AreEqual(
+            new[] { TokenType.Throw, TokenType.Try, TokenType.Catch, TokenType.Eof },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void ScansIntKeyword()
     {
         var tokens = Scan("int x");

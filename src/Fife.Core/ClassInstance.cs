@@ -4,9 +4,11 @@ public sealed class ClassInstance(ClassDefinition classDefinition)
 {
     private readonly Dictionary<string, object?> _fields = [];
 
+    public ClassDefinition ClassDefinition { get; } = classDefinition;
+
     public override string ToString()
     {
-        return classDefinition.Name + " instance";
+        return ClassDefinition.Name + " instance";
     }
 
     public object? Get(Token name)
@@ -14,7 +16,7 @@ public sealed class ClassInstance(ClassDefinition classDefinition)
         if (_fields.TryGetValue(name.Lexeme, out var value))
             return value;
 
-        var method = classDefinition.FindMethod(name.Lexeme);
+        var method = ClassDefinition.FindMethod(name.Lexeme);
         if (method != null) return method.Bind(this);
 
         throw new RuntimeError(name, $"Undefined property '{name.Lexeme}'.");

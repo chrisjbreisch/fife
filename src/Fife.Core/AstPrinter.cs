@@ -54,6 +54,11 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
     public string VisitReturnStmt(Stmt.Return stmt) =>
         stmt.Value is null ? "(return)" : Parenthesize("return", stmt.Value);
 
+    public string VisitThrowStmt(Stmt.Throw stmt) => Parenthesize("throw", stmt.Value);
+
+    public string VisitTryStmt(Stmt.Try stmt) =>
+        $"(try {Print(stmt.TryBlock)} (catch ({stmt.CatchType.Name.Lexeme} {stmt.CatchName.Lexeme}) {Print(stmt.CatchBlock)}))";
+
     public string VisitVarStmt(Stmt.Var stmt) => stmt.Initializer is null
         ? $"({FifeTypes.Name(stmt.Type)} {stmt.Name.Lexeme})"
         : Parenthesize($"{FifeTypes.Name(stmt.Type)} {stmt.Name.Lexeme}", stmt.Initializer);

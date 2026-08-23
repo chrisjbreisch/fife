@@ -88,6 +88,20 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesThrowStatements()
+    {
+        Assert.AreEqual("(throw (call Exception boom))", Print("throw Exception(\"boom\")\n"));
+    }
+
+    [TestMethod]
+    public void ParsesTryCatchStatements()
+    {
+        Assert.AreEqual(
+            "(try (; (call risky)) (catch (Exception e) (; (call writeln (. e message)))))",
+            Print("try {\nrisky()\n} catch (Exception e) {\nwriteln(e.message)\n}\n"));
+    }
+
+    [TestMethod]
     public void ParsesPropertyAccessAndAssignment()
     {
         Assert.AreEqual("(; (. a b))", Print("a.b\n"));

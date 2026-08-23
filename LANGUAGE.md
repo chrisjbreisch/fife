@@ -300,6 +300,52 @@ These mistakes are reported before the program runs:
 
 Naming a superclass that turns out not to be a class is a run-time error.
 
+## Exceptions
+
+Fife has a small built-in `Exception` class with a `message` field:
+
+```fife
+class Exception {
+    Exception(message) {
+        this.message = message
+    }
+}
+```
+
+`throw` raises an exception. Only instances of `Exception` or one of its subclasses may be thrown:
+
+```fife
+throw Exception("something went wrong")
+```
+
+`try` / `catch` runs a block and recovers from a matching exception:
+
+```fife
+try {
+    throw Exception("boom")
+} catch (Exception e) {
+    writeln(e.message)
+}
+```
+
+The catch type matches the thrown value's class or any of its superclasses, so catching
+`Exception` catches every built-in and user-defined exception. User-defined exception classes
+inherit from `Exception` the same way any other class inherits from a superclass:
+
+```fife
+class FileException : Exception {
+}
+
+try {
+    throw FileException("file not found")
+} catch (Exception e) {
+    writeln(e.message)
+}
+```
+
+An exception that no enclosing `catch` matches stops the program and is reported the same way
+other run-time errors are. `try` does not yet support `finally`.
+
 ## Errors
 
 A run-time error stops the program and prints the message followed by a call stack, innermost

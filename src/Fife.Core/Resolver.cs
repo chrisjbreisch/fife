@@ -231,6 +231,29 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         return null;
     }
 
+    public object? VisitThrowStmt(Stmt.Throw stmt)
+    {
+        Resolve(stmt.Value);
+
+        return null;
+    }
+
+    public object? VisitTryStmt(Stmt.Try stmt)
+    {
+        BeginScope();
+        Resolve(stmt.TryBlock);
+        EndScope();
+
+        Resolve(stmt.CatchType);
+
+        BeginScope();
+        _scopes.Peek()[stmt.CatchName.Lexeme] = true;
+        Resolve(stmt.CatchBlock);
+        EndScope();
+
+        return null;
+    }
+
     public object? VisitVarStmt(Stmt.Var stmt)
     {
         Declare(stmt.Name);

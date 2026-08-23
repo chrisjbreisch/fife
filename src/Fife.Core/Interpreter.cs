@@ -10,6 +10,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     private readonly IErrorReporter _errors;
     private readonly Stack<CallFrame> _frames = new();
     private Dictionary<Expr, int> _locals = [];
+    private ClassDefinition _exceptionClass = null!;
 
     public Interpreter(IErrorReporter errors, TextWriter? output = null, TextReader? input = null)
     {
@@ -19,6 +20,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         Globals = new FifeEnvironment();
         _environment = Globals;
         DefineStandardLibrary();
+        DefineBuiltInExceptionClass();
     }
 
     private FifeEnvironment _environment;
@@ -41,6 +43,23 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         catch (RuntimeError error)
         {
             _errors.RuntimeError(error);
+        }
+        catch (FifeThrow thrown)
+        {
+            _errors.RuntimeError(new RuntimeError(thrown.Keyword, $"Uncaught exception: {DescribeException(thrown.Instance)}"));
+        }
+    }
+
+    private static string DescribeException(ClassInstance instance)
+    {
+        try
+        {
+            var message = instance.Get(new Token(TokenType.Identifier, "message", null, 0, 0));
+            return message is null ? instance.ToString()! : Stringify(message);
+        }
+        catch (RuntimeError)
+        {
+            return instance.ToString()!;
         }
     }
 
@@ -101,6 +120,27 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)
     {
         if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
+    }
+
+    /// <summary>Defines the built-in <c>Exception</c> class by running fife source through the
+    /// normal scan/parse/resolve pipeline, so user classes can inherit from it like any other.</summary>
+    private void DefineBuiltInExceptionClass()
+    {
+        const string source = "class Exception {\n    Exception(message) {\n        this.message = message\n    }\n}\n";
+
+        var reporter = new SilentErrorReporter();
+        var tokens = new Scanner(source, reporter).ScanTokens();
+        var statements = new Parser(tokens, reporter).Parse();
+        if (reporter.HadError)
+            throw new InvalidOperationException("Built-in Exception class failed to compile.");
+
+        new Resolver(this, reporter).Resolve(statements);
+        if (reporter.HadError)
+            throw new InvalidOperationException("Built-in Exception class failed to resolve.");
+
+        foreach (var statement in statements) Execute(statement);
+
+        _exceptionClass = (ClassDefinition)Globals.Get(new Token(TokenType.Identifier, "Exception", null, 0, 0))!;
     }
 
     private void Execute(Stmt statement) => statement.Accept(this);
@@ -175,6 +215,44 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitReturnStmt(Stmt.Return stmt) =>
         throw new ReturnException(stmt.Value is null ? null : Evaluate(stmt.Value));
+
+    public object? VisitThrowStmt(Stmt.Throw stmt)
+    {
+        var value = Evaluate(stmt.Value);
+        if (value is not ClassInstance instance || !IsInstanceOf(instance, _exceptionClass))
+            throw new RuntimeError(stmt.Keyword, "Can only throw instances of Exception or a subclass.");
+
+        throw new FifeThrow(stmt.Keyword, instance);
+    }
+
+    public object? VisitTryStmt(Stmt.Try stmt)
+    {
+        try
+        {
+            ExecuteBlock(stmt.TryBlock, new FifeEnvironment(_environment));
+        }
+        catch (FifeThrow thrown)
+        {
+            if (Evaluate(stmt.CatchType) is not ClassDefinition catchClass)
+                throw new RuntimeError(stmt.CatchName, "Catch clause type must be a class.");
+
+            if (!IsInstanceOf(thrown.Instance, catchClass)) throw;
+
+            var environment = new FifeEnvironment(_environment);
+            environment.Define(stmt.CatchName.Lexeme, thrown.Instance);
+            ExecuteBlock(stmt.CatchBlock, environment);
+        }
+
+        return null;
+    }
+
+    private static bool IsInstanceOf(ClassInstance instance, ClassDefinition type)
+    {
+        for (var current = instance.ClassDefinition; current != null; current = current.Superclass)
+            if (current == type) return true;
+
+        return false;
+    }
 
     public object? VisitVarStmt(Stmt.Var stmt)
     {

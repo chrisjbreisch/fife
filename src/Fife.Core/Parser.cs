@@ -10,7 +10,9 @@ namespace Fife.Core;
 /// varDecl     -> type IDENTIFIER ( "=" expression )? terminator
 /// parameters  -> type? IDENTIFIER ( "," type? IDENTIFIER )*
 /// type        -> "var" | "bool" | "int" | "float" | "string"
-/// statement   -> exprStmt | forStmt | ifStmt | returnStmt | whileStmt | block
+/// statement   -> exprStmt | forStmt | ifStmt | returnStmt | throwStmt | tryStmt | whileStmt | block
+/// throwStmt   -> "throw" expression terminator
+/// tryStmt     -> "try" block "catch" "(" IDENTIFIER IDENTIFIER ")" block
 /// expression  -> assignment
 /// assignment  -> IDENTIFIER "=" assignment | logic_or
 /// logic_or    -> logic_and ( "or" logic_and )*
@@ -168,6 +170,8 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         if (Match(TokenType.For)) return ForStatement();
         if (Match(TokenType.If)) return IfStatement();
         if (Match(TokenType.Return)) return ReturnStatement();
+        if (Match(TokenType.Throw)) return ThrowStatement();
+        if (Match(TokenType.Try)) return TryStatement();
         if (Match(TokenType.While)) return WhileStatement();
         if (Match(TokenType.LeftBrace)) return new Stmt.Block(Block());
         return ExpressionStatement();
@@ -241,6 +245,33 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
         var condition = Expression();
         Consume(TokenType.RightParen, "Expect ')' after condition.");
         return new Stmt.While(condition, Statement());
+    }
+
+    private Stmt ThrowStatement()
+    {
+        var keyword = Previous;
+        var value = Expression();
+        ConsumeStatementTerminator("Expect end of throw statement.");
+        return new Stmt.Throw(keyword, value);
+    }
+
+    private Stmt TryStatement()
+    {
+        Consume(TokenType.LeftBrace, "Expect '{' after 'try'.");
+        var tryBlock = Block();
+
+        SkipNewLines();
+        Consume(TokenType.Catch, "Expect 'catch' after try block.");
+        Consume(TokenType.LeftParen, "Expect '(' after 'catch'.");
+        Consume(TokenType.Identifier, "Expect exception type name.");
+        var catchType = new Expr.Variable(Previous);
+        var catchName = Consume(TokenType.Identifier, "Expect exception variable name.");
+        Consume(TokenType.RightParen, "Expect ')' after catch clause.");
+
+        Consume(TokenType.LeftBrace, "Expect '{' before catch body.");
+        var catchBlock = Block();
+
+        return new Stmt.Try(tryBlock, catchType, catchName, catchBlock);
     }
 
     private Stmt ExpressionStatement()

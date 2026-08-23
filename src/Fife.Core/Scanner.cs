@@ -6,6 +6,7 @@ public sealed class Scanner(string source, IErrorReporter errors)
     {
         ["and"] = TokenType.And,
         ["bool"] = TokenType.Bool,
+        ["catch"] = TokenType.Catch,
         ["class"] = TokenType.Class,
         ["else"] = TokenType.Else,
         ["false"] = TokenType.False,
@@ -20,7 +21,9 @@ public sealed class Scanner(string source, IErrorReporter errors)
         ["super"] = TokenType.Super,
         ["string"] = TokenType.StringType,
         ["this"] = TokenType.This,
+        ["throw"] = TokenType.Throw,
         ["true"] = TokenType.True,
+        ["try"] = TokenType.Try,
         ["var"] = TokenType.Var,
         ["while"] = TokenType.While,
     };
