@@ -37,6 +37,11 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     /// to report a constructor-time error against.</summary>
     public Token? CurrentCallSite => _frames.Count > 0 ? _frames.Peek().CallSite : null;
 
+    /// <summary>The built-in <c>FileException</c> class, for native objects (such as
+    /// <see cref="FifeFileInstance"/> and <see cref="FifeDirectoryInstance"/>) that need to raise
+    /// a catchable exception via <see cref="CreateException"/>.</summary>
+    public ClassDefinition FileExceptionClass => _fileExceptionClass;
+
     /// <summary>The built-in <c>WebException</c> class, for native objects (such as <see cref="FifeWebInstance"/>)
     /// that need to raise a catchable exception via <see cref="CreateException"/>.</summary>
     public ClassDefinition WebExceptionClass => _webExceptionClass;
@@ -138,6 +143,10 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         DefineNative("Web", 0, 1, (interpreter, arguments) => arguments.Count == 1
             ? new FifeWebInstance(RequireString(arguments[0], interpreter.CurrentCallSite!, "Web"))
             : new FifeWebInstance());
+        DefineNative("File", 1, (interpreter, arguments) =>
+            new FifeFileInstance(RequireString(arguments[0], interpreter.CurrentCallSite!, "File")));
+        DefineNative("Directory", 1, (interpreter, arguments) =>
+            new FifeDirectoryInstance(RequireString(arguments[0], interpreter.CurrentCallSite!, "Directory")));
 
         DefineNative("pi", 0, (_, _) => Math.PI);
         DefineNative("sin", 1, (interpreter, arguments) =>
@@ -165,96 +174,6 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             return arguments.Count == 2
                 ? Math.Log(value, RequireNumber(arguments[1], interpreter.CurrentCallSite!, "log"))
                 : Math.Log(value);
-        });
-
-        DefineNative("readFile", 1, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "readFile");
-            try
-            {
-                return File.ReadAllText(path);
-            }
-            catch (FileNotFoundException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't read '{path}': {ex.Message}");
-            }
-        });
-        DefineNative("writeFile", 2, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "writeFile");
-            var content = RequireString(arguments[1], interpreter.CurrentCallSite!, "writeFile");
-            try
-            {
-                File.WriteAllText(path, content);
-                return null;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't write '{path}': {ex.Message}");
-            }
-        });
-        DefineNative("appendFile", 2, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "appendFile");
-            var content = RequireString(arguments[1], interpreter.CurrentCallSite!, "appendFile");
-            try
-            {
-                File.AppendAllText(path, content);
-                return null;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't write '{path}': {ex.Message}");
-            }
-        });
-        DefineNative("fileExists", 1, (interpreter, arguments) =>
-            File.Exists(RequireString(arguments[0], interpreter.CurrentCallSite!, "fileExists")));
-        DefineNative("directoryExists", 1, (interpreter, arguments) =>
-            Directory.Exists(RequireString(arguments[0], interpreter.CurrentCallSite!, "directoryExists")));
-        DefineNative("fileSize", 1, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "fileSize");
-            try
-            {
-                return (double)new FileInfo(path).Length;
-            }
-            catch (FileNotFoundException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or DirectoryNotFoundException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't access '{path}': {ex.Message}");
-            }
-        });
-        DefineNative("fileModifiedTime", 1, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "fileModifiedTime");
-            if (!File.Exists(path))
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"File not found: '{path}'.");
-
-            return (double)new DateTimeOffset(File.GetLastWriteTimeUtc(path)).ToUnixTimeSeconds();
-        });
-        DefineNative("listDirectory", 1, (interpreter, arguments) =>
-        {
-            var path = RequireString(arguments[0], interpreter.CurrentCallSite!, "listDirectory");
-            try
-            {
-                var entries = Directory.EnumerateFileSystemEntries(path).Select(entry => (object?)Path.GetFileName(entry));
-                return new FifeListInstance(entries);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Directory not found: '{path}'.");
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-            {
-                throw interpreter.CreateException(_fileExceptionClass, interpreter.CurrentCallSite!, $"Can't access '{path}': {ex.Message}");
-            }
         });
     }
 

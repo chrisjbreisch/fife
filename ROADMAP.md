@@ -70,11 +70,17 @@ runtime errors.
   instead. Arithmetic is named methods only (`add`, `subtract`, `multiply`), not operators — see
   "Operator Dispatch Decision" above.
 - A built-in `FileException : Exception` (first real subclass, bootstrapped alongside `Exception`
-  itself) and file/directory standard-library functions: `readFile`/`writeFile`/`appendFile`/
-  `fileExists`/`fileSize`/`fileModifiedTime`/`directoryExists`/`listDirectory`. File and directory
-  failures throw a catchable `FileException` via a general-purpose
-  `Interpreter.CreateException(ClassDefinition, Token, string)` helper, instead of an uncatchable
-  `RuntimeError` — the first stdlib functions to use catchable exceptions rather than `RuntimeError`.
+  itself) and native `File(path)`/`Directory(path)` handle types (`FifeFileInstance`/
+  `FifeDirectoryInstance`), each bound to a path at construction. `File`: `path`, `exists()`,
+  `read()`, `write(content)`, `append(content)`, `size()`, `modifiedTime()`. `Directory`: `path`,
+  `exists()`, `list()` (returns a `List`). File/directory failures throw a catchable
+  `FileException` via a general-purpose `Interpreter.CreateException(ClassDefinition, Token,
+  string)` helper, instead of an uncatchable `RuntimeError` — the first stdlib feature to use
+  catchable exceptions rather than `RuntimeError`. Originally shipped as top-level functions
+  (`readFile`/`writeFile`/`appendFile`/`fileExists`/`fileSize`/`fileModifiedTime`/
+  `directoryExists`/`listDirectory`); moved into `File`/`Directory` objects as a deliberate
+  breaking change, for consistency with every other native type (`List`, `Map`, `Web`, ...) being
+  constructed objects with methods rather than bare global functions.
 - A native `Web` type (`FifeWebInstance`), a synchronous HTTP client
   (`get`/`post`/`put`/`patch`/`delete`, a `Map` response with `statusCode`/`body`/`success`) with
   `setHeader`/`setApiKey`/`setBearerToken`/`setBasicAuth` for authentication, plus `Web(baseUrl)`/

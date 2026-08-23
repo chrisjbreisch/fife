@@ -343,8 +343,8 @@ try {
 }
 ```
 
-Fife also has one built-in subclass, `FileException`, thrown by the file functions in the
-standard library (`readFile`, `writeFile`, `appendFile`) — see below.
+Fife also has one built-in subclass, `FileException`, thrown by `File` and `Directory` members —
+see below.
 
 An exception that no enclosing `catch` matches stops the program and is reported the same way
 other run-time errors are. `try` does not yet support `finally`.
@@ -469,61 +469,65 @@ writeln(log(exp(1)))     // 1
 writeln(log(8, 2))       // 3
 ```
 
-### `readFile(path)`, `writeFile(path, content)`, `appendFile(path, content)`
+## Files
 
-Read a whole file as a string, write a string to a file (overwriting it), or append a string to
-a file (creating it if it doesn't exist).
+`File(path)` creates a native handle bound to a file path. Nothing touches the filesystem until
+you call a member:
 
 ```fife
-writeFile("notes.txt", "hello")
-appendFile("notes.txt", " world")
-writeln(readFile("notes.txt"))   // hello world
+var notes = File("notes.txt")
+notes.write("hello")
+notes.append(" world")
+writeln(notes.read())       // hello world
+writeln(notes.exists())     // true
+writeln(notes.size())       // 11
+writeln(notes.modifiedTime() > 0)  // true
+writeln(notes.path)         // notes.txt
 ```
 
-A failure — the file doesn't exist, a directory is missing, permissions are denied, and so on —
-throws a `FileException` (a built-in subclass of `Exception`), so it can be caught like any other
-fife exception:
+- `path` — the path the handle was created with.
+- `exists()` — whether the file exists, without throwing.
+- `read()` — the whole file as a string.
+- `write(content)` — writes `content`, overwriting the file (creating it if needed).
+- `append(content)` — appends `content` (creating the file if it doesn't exist).
+- `size()` — the file's size in bytes.
+- `modifiedTime()` — the last-modified time as a Unix timestamp in seconds, the same format
+  `clock()` uses.
+
+`read()`, `size()`, and `modifiedTime()` throw `FileException` (a built-in subclass of
+`Exception`) if the file doesn't exist; other failures — permissions denied, a missing directory,
+and so on — throw it too, so filesystem errors can be caught like any other fife exception:
 
 ```fife
 try {
-    readFile("missing.txt")
+    File("missing.txt").read()
 } catch (Exception e) {
     writeln(e.message)
 }
 ```
 
-### `fileExists(path)`
+`File` has no settable fields.
 
-Returns whether a file exists at `path`, without throwing.
+## Directories
 
-### `fileSize(path)`
-
-Returns the size of a file in bytes. Throws `FileException` if the file doesn't exist.
-
-### `fileModifiedTime(path)`
-
-Returns the file's last-modified time as a Unix timestamp in seconds, the same format `clock()`
-uses. Throws `FileException` if the file doesn't exist.
-
-### `directoryExists(path)`
-
-Returns whether a directory exists at `path`, without throwing.
-
-### `listDirectory(path)`
-
-Returns a `List` of the names of the files and subdirectories directly inside `path`. Throws
-`FileException` if the directory doesn't exist.
+`Directory(path)` creates a native handle bound to a directory path:
 
 ```fife
-writeln(fileSize("notes.txt"))            // 11
-writeln(fileModifiedTime("notes.txt") > 0) // true
-writeln(directoryExists("."))              // true
+var here = Directory(".")
+writeln(here.exists())   // true
 
-var entries = listDirectory(".")
+var entries = here.list()
 for (var i = 0; i < entries.length; i = i + 1) {
     writeln(entries.get(i))
 }
 ```
+
+- `path` — the path the handle was created with.
+- `exists()` — whether the directory exists, without throwing.
+- `list()` — a `List` of the names of the files and subdirectories directly inside it. Throws
+  `FileException` if the directory doesn't exist.
+
+`Directory` has no settable fields.
 
 ## Web
 

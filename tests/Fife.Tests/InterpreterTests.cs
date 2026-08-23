@@ -870,7 +870,8 @@ public sealed class InterpreterTests
         var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
         try
         {
-            Assert.AreEqual("hello", Run($"writeFile(\"{path}\", \"hello\")\nwriteln(readFile(\"{path}\"))\n"));
+            Assert.AreEqual("hello", Run(
+                $"var file = File(\"{path}\")\nfile.write(\"hello\")\nwriteln(file.read())\n"));
         }
         finally
         {
@@ -885,7 +886,7 @@ public sealed class InterpreterTests
         try
         {
             Assert.AreEqual("hello world", Run(
-                $"writeFile(\"{path}\", \"hello\")\nappendFile(\"{path}\", \" world\")\nwriteln(readFile(\"{path}\"))\n"));
+                $"var file = File(\"{path}\")\nfile.write(\"hello\")\nfile.append(\" world\")\nwriteln(file.read())\n"));
         }
         finally
         {
@@ -900,7 +901,7 @@ public sealed class InterpreterTests
         try
         {
             Assert.AreEqual("false\ntrue", Run(
-                $"writeln(fileExists(\"{path}\"))\nwriteFile(\"{path}\", \"hi\")\nwriteln(fileExists(\"{path}\"))\n"));
+                $"var file = File(\"{path}\")\nwriteln(file.exists())\nfile.write(\"hi\")\nwriteln(file.exists())\n"));
         }
         finally
         {
@@ -913,19 +914,19 @@ public sealed class InterpreterTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"fife-test-missing-{Guid.NewGuid():N}.txt");
         Assert.AreEqual("caught: File not found: " + $"'{path}'.", Run(
-            $"try {{\nreadFile(\"{path}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+            $"try {{\nFile(\"{path}\").read()\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
     }
 
     [TestMethod]
-    public void ReportsANonStringArgumentToReadFile()
+    public void ReportsANonStringArgumentToTheFileConstructor()
     {
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("readFile(1)\n");
+        engine.Run("File(1)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
-        StringAssert.Contains(output.ToString(), "readFile() expects a string.");
+        StringAssert.Contains(output.ToString(), "File() expects a string.");
     }
 
     [TestMethod]
@@ -934,7 +935,7 @@ public sealed class InterpreterTests
         var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
         try
         {
-            Assert.AreEqual("5", Run($"writeFile(\"{path}\", \"hello\")\nwriteln(fileSize(\"{path}\"))\n"));
+            Assert.AreEqual("5", Run($"var file = File(\"{path}\")\nfile.write(\"hello\")\nwriteln(file.size())\n"));
         }
         finally
         {
@@ -947,7 +948,7 @@ public sealed class InterpreterTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"fife-test-missing-{Guid.NewGuid():N}.txt");
         Assert.AreEqual("caught: File not found: " + $"'{path}'.", Run(
-            $"try {{\nfileSize(\"{path}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+            $"try {{\nFile(\"{path}\").size()\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
     }
 
     [TestMethod]
@@ -957,7 +958,7 @@ public sealed class InterpreterTests
         try
         {
             Assert.AreEqual("true", Run(
-                $"writeFile(\"{path}\", \"hi\")\nwriteln(fileModifiedTime(\"{path}\") > 0)\n"));
+                $"var file = File(\"{path}\")\nfile.write(\"hi\")\nwriteln(file.modifiedTime() > 0)\n"));
         }
         finally
         {
@@ -966,11 +967,18 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ReportsAFilesPath()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"fife-test-{Guid.NewGuid():N}.txt");
+        Assert.AreEqual(path, Run($"writeln(File(\"{path}\").path)\n"));
+    }
+
+    [TestMethod]
     public void ChecksWhetherADirectoryExists()
     {
         Assert.AreEqual("true\nfalse", Run(
-            $"writeln(directoryExists(\"{Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar)}\"))\n"
-            + "writeln(directoryExists(\"no-such-directory-should-exist\"))\n"));
+            $"writeln(Directory(\"{Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar)}\").exists())\n"
+            + "writeln(Directory(\"no-such-directory-should-exist\").exists())\n"));
     }
 
     [TestMethod]
@@ -982,8 +990,8 @@ public sealed class InterpreterTests
         try
         {
             Assert.AreEqual("1\ntrue", Run(
-                $"writeFile(\"{filePath}\", \"hi\")\n"
-                + $"var entries = listDirectory(\"{directory}\")\n"
+                $"File(\"{filePath}\").write(\"hi\")\n"
+                + $"var entries = Directory(\"{directory}\").list()\n"
                 + "writeln(entries.length)\nwriteln(entries.contains(\"a.txt\"))\n"));
         }
         finally
@@ -997,7 +1005,7 @@ public sealed class InterpreterTests
     {
         var directory = Path.Combine(Path.GetTempPath(), $"fife-test-missing-dir-{Guid.NewGuid():N}");
         Assert.AreEqual("caught: Directory not found: " + $"'{directory}'.", Run(
-            $"try {{\nlistDirectory(\"{directory}\")\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
+            $"try {{\nDirectory(\"{directory}\").list()\n}} catch (Exception e) {{\nwriteln(\"caught: \" + e.message)\n}}\n"));
     }
 
     [TestMethod]
