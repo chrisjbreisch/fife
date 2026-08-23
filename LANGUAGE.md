@@ -51,7 +51,7 @@ Statements end at a newline. A backslash immediately followed by a newline conti
 statement onto the next line:
 
 ```fife
-writeln(1 + \
+Con.writeln(1 + \
 2)
 ```
 
@@ -60,7 +60,7 @@ condition, and increment clauses in a `for` header:
 
 ```fife
 for (var i = 0; i < 3; i = i + 1)
-  writeln(i)
+  Con.writeln(i)
 ```
 
 Supported statement forms are:
@@ -86,7 +86,7 @@ always means the same variable no matter when it is evaluated:
 var a = "global"
 {
   fun showA() {
-    writeln(a)
+    Con.writeln(a)
   }
 
   showA()      // global
@@ -117,7 +117,7 @@ int fun add(int a, int b) {
   return a + b
 }
 
-writeln(add(1, 2)) // 3
+Con.writeln(add(1, 2)) // 3
 ```
 
 An annotation may be any of `var`, `int`, `float`, `bool`, or `string`. Omitting an annotation is
@@ -169,8 +169,8 @@ fun makeCounter() {
 }
 
 var counter = makeCounter()
-writeln(counter()) // 1
-writeln(counter()) // 2
+Con.writeln(counter()) // 1
+Con.writeln(counter()) // 2
 ```
 
 ## Classes
@@ -181,7 +181,7 @@ without the `fun` keyword:
 ```fife
 class Greeter {
   greet() {
-    writeln("hi")
+    Con.writeln("hi")
   }
 }
 
@@ -199,7 +199,7 @@ class Greeter {
   }
 
   greet() {
-    writeln("hi, " + this.name)
+    Con.writeln("hi, " + this.name)
   }
 }
 
@@ -214,7 +214,7 @@ Fields are created by assigning to them and may be read or written from outside 
 ```fife
 var g = Greeter("world")
 g.name = "fife"
-writeln(g.name)
+Con.writeln(g.name)
 ```
 
 A field shadows a method of the same name. Methods take type annotations exactly as functions do:
@@ -249,13 +249,13 @@ class Animal {
   }
 
   speak() {
-    writeln(this.name + " makes a sound")
+    Con.writeln(this.name + " makes a sound")
   }
 }
 
 class Dog : Animal {
   speak() {
-    writeln(this.name + " barks")
+    Con.writeln(this.name + " barks")
   }
 }
 ```
@@ -267,7 +267,7 @@ extends rather than replaces behaviour:
 class Dog : Animal {
   speak() {
     super.speak()
-    writeln(this.name + " barks")
+    Con.writeln(this.name + " barks")
   }
 }
 ```
@@ -325,7 +325,7 @@ throw Exception("something went wrong")
 try {
     throw Exception("boom")
 } catch (Exception e) {
-    writeln(e.message)
+    Con.writeln(e.message)
 }
 ```
 
@@ -340,7 +340,7 @@ class InvalidInputException : Exception {
 try {
     throw InvalidInputException("age must be positive")
 } catch (Exception e) {
-    writeln(e.message)
+    Con.writeln(e.message)
 }
 ```
 
@@ -362,9 +362,9 @@ give the uncatchable side a name yet, since nothing can currently catch it eithe
 
 ```fife
 try {
-    writeln(1 - "two")     // interpreter error, not a thrown Exception
+    Con.writeln(1 - "two")     // interpreter error, not a thrown Exception
 } catch (Exception e) {
-    writeln("never runs")
+    Con.writeln("never runs")
 }
 ```
 
@@ -483,11 +483,11 @@ you call a member:
 var notes = File("notes.txt")
 notes.write("hello")
 notes.append(" world")
-writeln(notes.read())       // hello world
-writeln(notes.exists())     // true
-writeln(notes.size())       // 11
-writeln(notes.modifiedTime() > 0)  // true
-writeln(notes.path)         // notes.txt
+Con.writeln(notes.read())       // hello world
+Con.writeln(notes.exists())     // true
+Con.writeln(notes.size())       // 11
+Con.writeln(notes.modifiedTime() > 0)  // true
+Con.writeln(notes.path)         // notes.txt
 ```
 
 - `path` — the path the handle was created with.
@@ -507,7 +507,7 @@ and so on — throw it too, so filesystem errors can be caught like any other fi
 try {
     File("missing.txt").read()
 } catch (Exception e) {
-    writeln(e.message)
+    Con.writeln(e.message)
 }
 ```
 
@@ -519,11 +519,11 @@ try {
 
 ```fife
 var here = Directory(".")
-writeln(here.exists())   // true
+Con.writeln(here.exists())   // true
 
 var entries = here.list()
 for (var i = 0; i < entries.length; i = i + 1) {
-    writeln(entries.get(i))
+    Con.writeln(entries.get(i))
 }
 ```
 
@@ -542,9 +542,9 @@ fife, so the call blocks until the response arrives (or the request fails).
 ```fife
 var web = Web()
 var response = web.get("https://example.com/api/users")
-writeln(response.get("statusCode"))   // 200
-writeln(response.get("success"))      // true
-writeln(response.get("body"))
+Con.writeln(response.get("statusCode"))   // 200
+Con.writeln(response.get("success"))      // true
+Con.writeln(response.get("body"))
 ```
 
 - `get(url)` — sends a GET request.
@@ -563,7 +563,7 @@ never gets a response (host unreachable, connection refused, and so on) throws a
 try {
     web.get("https://unreachable.example.invalid")
 } catch (Exception e) {
-    writeln(e.message)
+    Con.writeln(e.message)
 }
 ```
 
@@ -574,7 +574,7 @@ resolved against, so requests only need to name the path:
 
 ```fife
 var api = Web("https://example.com/api/")
-writeln(api.get("users/1").get("statusCode"))   // resolves to https://example.com/api/users/1
+Con.writeln(api.get("users/1").get("statusCode"))   // resolves to https://example.com/api/users/1
 ```
 
 A URL that is already absolute (starts with a scheme like `http://` or `https://`) is used as-is,
@@ -595,7 +595,7 @@ Authentication is configured once and applies to every subsequent request on tha
 var api = Web()
 api.setBearerToken(jwt)
 api.setHeader("Accept", "application/json")
-writeln(api.get("https://example.com/api/me").get("statusCode"))
+Con.writeln(api.get("https://example.com/api/me").get("statusCode"))
 ```
 
 `Web` has no settable fields.
@@ -605,13 +605,13 @@ writeln(api.get("https://example.com/api/me").get("statusCode"))
 Strings expose members through the same `value.name` syntax used for class instances:
 
 ```fife
-writeln("hello".length)       // 5
-writeln("hello".upper())      // HELLO
-writeln("HELLO".lower())      // hello
-writeln("  hi  ".trim())      // hi
-writeln("hello world".substring(0, 5))  // hello
-writeln("hello".substring(2))           // llo
-writeln("hello".replace("l", "L"))      // heLLo
+Con.writeln("hello".length)       // 5
+Con.writeln("hello".upper())      // HELLO
+Con.writeln("HELLO".lower())      // hello
+Con.writeln("  hi  ".trim())       // hi
+Con.writeln("hello world".substring(0, 5))  // hello
+Con.writeln("hello".substring(2))           // llo
+Con.writeln("hello".replace("l", "L"))      // heLLo
 ```
 
 - `length` — the number of characters, as an `int`.
@@ -632,11 +632,11 @@ Strings are immutable: assigning to a string member is a run-time error.
 Numbers expose members the same way:
 
 ```fife
-writeln(3.14159.round(2))     // 3.14
-writeln(3.6.round())          // 4
-writeln(3.7.floor())          // 3
-writeln(3.2.ceil())           // 4
-writeln((-1.5).abs())         // 1.5
+Con.writeln(3.14159.round(2))     // 3.14
+Con.writeln(3.6.round())          // 4
+Con.writeln(3.7.floor())          // 3
+Con.writeln(3.2.ceil())           // 4
+Con.writeln((-1.5).abs())         // 1.5
 ```
 
 - `round()` — rounds to the nearest integer; `round(digits)` rounds to that many decimal places.
@@ -653,7 +653,7 @@ Numbers are immutable: assigning to a number member is a run-time error.
 ```fife
 var empty = List()
 var numbers = List(1, 2, 3)
-writeln(numbers)   // [1, 2, 3]
+Con.writeln(numbers)   // [1, 2, 3]
 ```
 
 Lists expose members the same way strings and numbers do:
@@ -674,9 +674,9 @@ Lists also support `[...]` indexing, equivalent to `get`/`set`:
 
 ```fife
 var numbers = List(1, 2, 3)
-writeln(numbers[0])   // 1
+Con.writeln(numbers[0])   // 1
 numbers[1] = 9
-writeln(numbers)       // [1, 9, 3]
+Con.writeln(numbers)       // [1, 9, 3]
 ```
 
 `value[index]` and `value[index] = newValue` work on any type that implements the `[]` protocol
@@ -688,7 +688,7 @@ There is no dedicated loop syntax for lists yet, so iterate with an ordinary `fo
 ```fife
 var names = List("Ann", "Bo", "Cy")
 for (var i = 0; i < names.length; i = i + 1) {
-    writeln(names.get(i))
+    Con.writeln(names.get(i))
 }
 ```
 
@@ -700,8 +700,8 @@ pushed in order, so the last argument starts on top:
 ```fife
 var stack = Stack(1, 2)
 stack.push(3)
-writeln(stack.pop())      // 3
-writeln(stack.pop())      // 2
+Con.writeln(stack.pop())      // 3
+Con.writeln(stack.pop())      // 2
 ```
 
 - `length` — the number of items, as an `int`.
@@ -720,8 +720,8 @@ enqueued in order:
 ```fife
 var queue = Queue(1, 2)
 queue.enqueue(3)
-writeln(queue.dequeue())  // 1
-writeln(queue.dequeue())  // 2
+Con.writeln(queue.dequeue())  // 1
+Con.writeln(queue.dequeue())  // 2
 ```
 
 - `length` — the number of items, as an `int`.
@@ -742,9 +742,9 @@ var ages = Map()
 ages.set("Ann", 30)
 ages["Bo"] = 25
 
-writeln(ages.get("Ann"))   // 30
-writeln(ages["Bo"])        // 25
-writeln(ages.length)       // 2
+Con.writeln(ages.get("Ann"))   // 30
+Con.writeln(ages["Bo"])        // 25
+Con.writeln(ages.length)       // 2
 ```
 
 - `length` — the number of entries, as an `int`.
@@ -767,11 +767,11 @@ arithmetic operators — `v.add(w)`, not `v + w`.
 
 ```fife
 var v = Vector(1, 2, 3)
-writeln(v)              // Vector[1, 2, 3]
-writeln(v.length)        // 3
-writeln(v.get(0))        // 1
+Con.writeln(v)              // Vector[1, 2, 3]
+Con.writeln(v.length)        // 3
+Con.writeln(v.get(0))        // 1
 v.set(0, 9)
-writeln(v[0])             // 9 - [...] is equivalent to get/set
+Con.writeln(v[0])             // 9 - [...] is equivalent to get/set
 ```
 
 Vector members:
@@ -786,10 +786,10 @@ Vector members:
 
 ```fife
 var m = Matrix(List(1, 2), List(3, 4))
-writeln(m)              // Matrix[[1, 2], [3, 4]]
-writeln(m.rows)          // 2
-writeln(m.columns)       // 2
-writeln(m.get(0, 1))     // 2
+Con.writeln(m)              // Matrix[[1, 2], [3, 4]]
+Con.writeln(m.rows)          // 2
+Con.writeln(m.columns)       // 2
+Con.writeln(m.get(0, 1))     // 2
 m.set(0, 1, 9)
 ```
 
