@@ -12,6 +12,21 @@ Robert Nystrom's [Crafting Interpreters](https://craftinginterpreters.com/).
 | `tests/Fife.Tests` | MSTest suite |
 | `examples` | Sample `.fife` scripts |
 
+### Examples
+
+| File | Demonstrates |
+| --- | --- |
+| `tour.fife` | Core language: variables, control flow, functions, closures, classes |
+| `exceptions.fife` | `throw`, `try`/`catch`, and the built-in `Exception` hierarchy |
+| `collections.fife` | `List`, `Stack`, `Queue`, `Map`, and `[...]` indexing |
+| `math.fife` | Number members, trig/log functions, `Vector`, `Matrix` |
+| `strings.fife` | String members: `upper`, `lower`, `trim`, `substring`, `replace` |
+| `files.fife` | `File` and `Directory` objects |
+| `web.fife` | The `Web` HTTP client, including authentication |
+
+Run any of them with `dotnet run --project src/Fife.Cli -- examples/<file>.fife`.
+
+
 ### Core pipeline
 
 `Scanner` -> `Parser` -> `Resolver` -> `Interpreter`, orchestrated by `FifeEngine`. The resolver

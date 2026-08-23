@@ -1,0 +1,23 @@
+// Files and directories. Running this script creates (and leaves behind) a small
+// text file named fife-example.txt in the current directory.
+
+var notes = File("fife-example.txt")
+notes.write("first line, ")
+notes.append("second line")
+
+writeln(notes.exists())          // true
+writeln(notes.path)              // fife-example.txt
+writeln(notes.size())            // size in bytes
+writeln(notes.modifiedTime() > 0) // true
+writeln(notes.read())
+
+var here = Directory(".")
+writeln(here.exists())           // true
+writeln(here.list().contains("fife-example.txt")) // true
+
+// A missing file reports a catchable FileException instead of crashing the script.
+try {
+  File("no-such-file.txt").read()
+} catch (Exception e) {
+  writeln("caught: " + e.message)
+}

@@ -1,0 +1,44 @@
+// Collections: List, Stack, Queue, and Map.
+
+// List: resizable, index-accessible.
+var names = List("Ann", "Bo", "Cy")
+names.add("Dee")
+writeln(names)                 // [Ann, Bo, Cy, Dee]
+writeln(names.length)          // 4
+writeln(names[0])              // Ann
+names[0] = "Annie"
+writeln(names.contains("Bo"))  // true
+writeln(names.indexOf("Cy"))   // 2
+names.remove("Bo")
+writeln(names)                 // [Annie, Cy, Dee]
+
+for (var i = 0; i < names.length; i = i + 1) {
+  writeln("  " + i + ": " + names[i])
+}
+
+// Stack: last in, first out.
+var stack = Stack(1, 2)
+stack.push(3)
+writeln(stack.pop())    // 3
+writeln(stack.peek())   // 2
+writeln(stack.isEmpty()) // false
+
+// Queue: first in, first out.
+var queue = Queue(1, 2)
+queue.enqueue(3)
+writeln(queue.dequeue()) // 1
+writeln(queue.peek())    // 2
+
+// Map: keyed lookup.
+var ages = Map()
+ages.set("Ann", 30)
+ages["Bo"] = 25
+writeln(ages.get("Ann"))       // 30
+writeln(ages["Bo"])            // 25
+writeln(ages.containsKey("Cy")) // false
+writeln(ages.length)           // 2
+
+var keys = ages.keys()
+for (var i = 0; i < keys.length; i = i + 1) {
+  writeln(keys[i] + " is " + ages.get(keys[i]))
+}

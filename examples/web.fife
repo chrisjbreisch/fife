@@ -1,0 +1,28 @@
+// Web: a synchronous HTTP client. Requires internet access to actually run;
+// wrapped in try/catch so this script still completes without one.
+
+try {
+  var web = Web("https://example.com")
+  web.setHeader("Accept", "text/html")
+
+  var response = web.get("/")
+  writeln(response.get("statusCode")) // 200
+  writeln(response.get("success"))    // true
+
+  // A non-2xx response is returned normally, not thrown.
+  var missing = web.get("/no-such-page")
+  writeln(missing.get("statusCode"))  // 404
+  writeln(missing.get("success"))     // false
+} catch (Exception e) {
+  writeln("request failed: " + e.message)
+}
+
+// Authentication is configured once per Web instance.
+var api = Web("https://example.com/api/")
+api.setBearerToken("my-jwt-token")           // Authorization: Bearer ...
+api.setApiKey("X-Api-Key", "my-api-key")     // custom header
+api.setBasicAuth("user", "pass")             // Authorization: Basic ... (overwrites the bearer token)
+
+// api.get("users/1")  // resolves to https://example.com/api/users/1
+
+writeln("done")
