@@ -712,5 +712,19 @@ public sealed class InterpreterTests
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Uncaught exception: boom");
     }
+
+    [TestMethod]
+    public void ReportsACallStackForAnUncaughtExceptionFromNestedCalls()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("fun inner() {\nthrow Exception(\"boom\")\n}\nfun outer() {\ninner()\n}\nouter()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        Assert.AreEqual(
+            "Uncaught exception: boom\n[line 2] in inner\n[line 5] in outer\n[line 7] in script\n",
+            output.ToString().ReplaceLineEndings("\n"));
+    }
 }
 

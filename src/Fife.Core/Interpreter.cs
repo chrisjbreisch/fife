@@ -46,7 +46,9 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         }
         catch (FifeThrow thrown)
         {
-            _errors.RuntimeError(new RuntimeError(thrown.Keyword, $"Uncaught exception: {DescribeException(thrown.Instance)}"));
+            var error = new RuntimeError(thrown.Keyword, $"Uncaught exception: {DescribeException(thrown.Instance)}");
+            error.Frames = thrown.Frames;
+            _errors.RuntimeError(error);
         }
     }
 
@@ -375,6 +377,12 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         {
             // The innermost frame to see the error captures the deepest stack.
             error.Frames ??= _frames.ToArray();
+            throw;
+        }
+        catch (FifeThrow thrown)
+        {
+            // Same rationale as above: capture the stack at the deepest frame that sees it.
+            thrown.Frames ??= _frames.ToArray();
             throw;
         }
         finally
