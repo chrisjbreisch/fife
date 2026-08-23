@@ -428,6 +428,30 @@ string name = readln("Name: ")
 writeln("Hello, " + name)
 ```
 
+### `pi()`
+
+Returns π.
+
+### `sin(x)`, `cos(x)`, `tan(x)`
+
+The standard trigonometric functions. `x` is in radians.
+
+### `asin(x)`, `acos(x)`, `atan(x)`
+
+The inverse trigonometric functions. `x` is a ratio; the result is in radians.
+
+### `atan2(y, x)`
+
+The angle, in radians, of the point `(x, y)` from the positive x-axis. Unlike `atan(y / x)`, it
+uses the sign of both arguments to pick the correct quadrant.
+
+```fife
+writeln(sin(pi() / 2))     // 1
+writeln(atan2(1, 1).round(4))  // 0.7854
+```
+
+Each of these reports a run-time error if its argument isn't a number.
+
 ### String members
 
 Strings expose members through the same `value.name` syntax used for class instances:

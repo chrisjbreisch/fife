@@ -129,7 +129,28 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             FifeVectorInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
         DefineNative("Matrix", 1, 255, (interpreter, arguments) =>
             FifeMatrixInstance.FromArguments(arguments, interpreter.CurrentCallSite!));
+
+        DefineNative("pi", 0, (_, _) => Math.PI);
+        DefineNative("sin", 1, (interpreter, arguments) =>
+            Math.Sin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "sin")));
+        DefineNative("cos", 1, (interpreter, arguments) =>
+            Math.Cos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "cos")));
+        DefineNative("tan", 1, (interpreter, arguments) =>
+            Math.Tan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "tan")));
+        DefineNative("asin", 1, (interpreter, arguments) =>
+            Math.Asin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "asin")));
+        DefineNative("acos", 1, (interpreter, arguments) =>
+            Math.Acos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "acos")));
+        DefineNative("atan", 1, (interpreter, arguments) =>
+            Math.Atan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan")));
+        DefineNative("atan2", 2, (interpreter, arguments) =>
+            Math.Atan2(
+                RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan2"),
+                RequireNumber(arguments[1], interpreter.CurrentCallSite!, "atan2")));
     }
+
+    private static double RequireNumber(object? argument, Token token, string function) =>
+        argument is double number ? number : throw new RuntimeError(token, $"{function}() expects a number.");
 
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)
     {

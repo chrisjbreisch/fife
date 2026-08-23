@@ -794,6 +794,44 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ComputesBasicTrigValues()
+    {
+        Assert.AreEqual("0\n1\n0", Run("writeln(sin(0))\nwriteln(cos(0))\nwriteln(tan(0))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesTrigValuesUsingPi()
+    {
+        Assert.AreEqual("1\n0\n3.1416", Run(
+            "writeln(sin(pi() / 2).round(4))\nwriteln(cos(pi() / 2).round(4))\nwriteln(pi().round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesInverseTrigValues()
+    {
+        Assert.AreEqual("1.5708\n0\n0.7854", Run(
+            "writeln(asin(1).round(4))\nwriteln(acos(1))\nwriteln(atan(1).round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesAtan2()
+    {
+        Assert.AreEqual("0.7854", Run("writeln(atan2(1, 1).round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ReportsANonNumberArgumentToATrigFunction()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("sin(\"x\")\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "sin() expects a number.");
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();
