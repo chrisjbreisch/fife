@@ -398,7 +398,8 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         {
             IFifeObject fifeObject => fifeObject.Get(expr.Name),
             string str => FifeString.Get(str, expr.Name),
-            _ => throw new RuntimeError(expr.Name, "Only class instances and strings have properties.")
+            double number => FifeNumber.Get(number, expr.Name),
+            _ => throw new RuntimeError(expr.Name, "Only class instances, strings, and numbers have properties.")
         };
     }
 

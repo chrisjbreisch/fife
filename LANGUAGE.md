@@ -234,7 +234,7 @@ program runs:
 - Declaring a return type on a constructor, which always returns its instance
 
 Reading a property that is neither a field nor a method, or using property syntax on something
-that is not an instance or a string, is a run-time error.
+that is not an instance, string, or number, is a run-time error.
 
 ## Inheritance
 
@@ -445,3 +445,22 @@ writeln("  hi  ".trim())      // hi
 - `trim()` — a copy with leading and trailing whitespace removed.
 
 Strings are immutable: assigning to a string member is a run-time error.
+
+### Number members
+
+Numbers expose members the same way:
+
+```fife
+writeln(3.14159.round(2))     // 3.14
+writeln(3.6.round())          // 4
+writeln(3.7.floor())          // 3
+writeln(3.2.ceil())           // 4
+writeln((-1.5).abs())         // 1.5
+```
+
+- `round()` — rounds to the nearest integer; `round(digits)` rounds to that many decimal places.
+- `floor()` — rounds down to the nearest integer.
+- `ceil()` — rounds up to the nearest integer.
+- `abs()` — the absolute value.
+
+Numbers are immutable: assigning to a number member is a run-time error.

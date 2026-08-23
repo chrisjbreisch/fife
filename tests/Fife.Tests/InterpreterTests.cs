@@ -328,10 +328,10 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var x = 1\nwriteln(x.field)\n");
+        engine.Run("var x = true\nwriteln(x.field)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
-        StringAssert.Contains(output.ToString(), "Only class instances and strings have properties.");
+        StringAssert.Contains(output.ToString(), "Only class instances, strings, and numbers have properties.");
     }
 
     [TestMethod]
@@ -378,6 +378,43 @@ public sealed class InterpreterTests
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
         engine.Run("\"hello\".length = 1\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only class instances have fields.");
+    }
+
+    [TestMethod]
+    public void CallsNumberMemberMethods()
+    {
+        Assert.AreEqual("3.14\n3\n4\n1.5", Run(
+            "writeln(3.14159.round(2))\nwriteln(3.7.floor())\nwriteln(3.2.ceil())\nwriteln((-1.5).abs())\n"));
+    }
+
+    [TestMethod]
+    public void RoundsToTheNearestIntegerWithoutDigits()
+    {
+        Assert.AreEqual("4", Run("writeln(3.6.round())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsAnUndefinedNumberProperty()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("writeln(1.5.missing)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Undefined property 'missing'.");
+    }
+
+    [TestMethod]
+    public void ReportsAssigningToANumberProperty()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("1.5.round = 1\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Only class instances have fields.");
