@@ -34,7 +34,7 @@ exceptions, comments, and standard library reference.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for planned object protocols, indexing, and standard-library types.
+See [ROADMAP.md](ROADMAP.md) for planned indexing and standard-library types.
 
 ## Extending it
 

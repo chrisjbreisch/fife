@@ -1,6 +1,6 @@
 ﻿namespace Fife.Core;
 
-public sealed class ClassInstance(ClassDefinition classDefinition)
+public sealed class ClassInstance(ClassDefinition classDefinition) : IFifeObject
 {
     private readonly Dictionary<string, object?> _fields = [];
 

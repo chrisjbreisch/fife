@@ -394,10 +394,12 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     public object? VisitGetExpr(Expr.Get expr)
     {
         var obj = Evaluate(expr.Object);
-        if (obj is ClassInstance instance)
-            return instance.Get(expr.Name);
-
-        throw new RuntimeError(expr.Name, "Only class instances have properties.");
+        return obj switch
+        {
+            IFifeObject fifeObject => fifeObject.Get(expr.Name),
+            string str => FifeString.Get(str, expr.Name),
+            _ => throw new RuntimeError(expr.Name, "Only class instances and strings have properties.")
+        };
     }
 
     public object? VisitGroupingExpr(Expr.Grouping expr) => Evaluate(expr.Expression);
@@ -426,11 +428,11 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     public object? VisitSetExpr(Expr.Set expr)    {
         var obj = Evaluate(expr.Object);
 
-        if (obj is not ClassInstance instance) 
+        if (obj is not IFifeObject fifeObject)
             throw new RuntimeError(expr.Name, "Only class instances have fields.");
 
         var value = Evaluate(expr.Value);
-        instance.Set(expr.Name, value);
+        fifeObject.Set(expr.Name, value);
         return value;
 
     }

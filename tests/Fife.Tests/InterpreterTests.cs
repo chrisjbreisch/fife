@@ -331,7 +331,7 @@ public sealed class InterpreterTests
         engine.Run("var x = 1\nwriteln(x.field)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
-        StringAssert.Contains(output.ToString(), "Only class instances have properties.");
+        StringAssert.Contains(output.ToString(), "Only class instances and strings have properties.");
     }
 
     [TestMethod]
@@ -341,6 +341,43 @@ public sealed class InterpreterTests
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
         engine.Run("var x = 1\nx.field = 2\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only class instances have fields.");
+    }
+
+    [TestMethod]
+    public void ReadsTheLengthOfAString()
+    {
+        Assert.AreEqual("5", Run("writeln(\"hello\".length)\n"));
+    }
+
+    [TestMethod]
+    public void CallsStringMemberMethods()
+    {
+        Assert.AreEqual("HELLO\nhello\nhi", Run(
+            "writeln(\"hello\".upper())\nwriteln(\"HELLO\".lower())\nwriteln(\"  hi  \".trim())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsAnUndefinedStringProperty()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("writeln(\"hello\".missing)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Undefined property 'missing'.");
+    }
+
+    [TestMethod]
+    public void ReportsAssigningToAStringProperty()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("\"hello\".length = 1\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Only class instances have fields.");

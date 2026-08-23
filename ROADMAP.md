@@ -13,18 +13,7 @@ call-stack tracing, and exception handling.
 - `void` / `FifeType.None` is intentionally out of scope. Omitting a return type already permits a
   function to return no value, so a separate type is not currently worth the extra semantics.
 
-## 1. Host Object Protocol
-
-Generalize property access beyond `ClassInstance`:
-
-- Introduce an `IFifeObject`-style protocol for `Get` and `Set` behavior.
-- Have `ClassInstance` implement the protocol.
-- Let native objects and primitive adapters expose members through the same expression path.
-- Use this to add useful string members such as `length` and string operations.
-
-Today `"hello".length` fails because `Expr.Get` only accepts class instances.
-
-## 2. Indexing
+## 1. Indexing
 
 Add indexing before collection types are implemented:
 
@@ -34,7 +23,7 @@ Add indexing before collection types are implemented:
 - Define index error behavior through the exception system.
 - Make the protocol usable by lists, strings, vectors, and matrices.
 
-## 3. Standard Library Objects
+## 2. Standard Library Objects
 
 Implement native-backed objects after the object protocol and indexing are stable:
 
@@ -47,7 +36,7 @@ Implement native-backed objects after the object protocol and indexing are stabl
 Each type should have focused behavior tests and documented construction, member, and error
 semantics. Standard-library failures should use the exception system where recovery is useful.
 
-## 4. Operator Dispatch Decision
+## 3. Operator Dispatch Decision
 
 Decide how objects participate in operators before adding substantial matrix/vector APIs:
 
@@ -72,6 +61,8 @@ runtime errors.
 - Runtime call-stack traces and a maximum call depth
 - A built-in `Exception` class, `throw`, and `try` / `catch (Type name)` matched by walking
   `ClassDefinition.Superclass`
+- An `IFifeObject` protocol for `Get`/`Set` behavior, implemented by `ClassInstance` and extended
+  to strings (`length`, `upper()`, `lower()`, `trim()`)
 
 ## Deliberately Deferred
 

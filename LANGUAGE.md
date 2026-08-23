@@ -234,7 +234,7 @@ program runs:
 - Declaring a return type on a constructor, which always returns its instance
 
 Reading a property that is neither a field nor a method, or using property syntax on something
-that is not an instance, is a run-time error.
+that is not an instance or a string, is a run-time error.
 
 ## Inheritance
 
@@ -427,3 +427,21 @@ Writes a newline with zero arguments, or one value followed by a newline with on
 string name = readln("Name: ")
 writeln("Hello, " + name)
 ```
+
+### String members
+
+Strings expose members through the same `value.name` syntax used for class instances:
+
+```fife
+writeln("hello".length)       // 5
+writeln("hello".upper())      // HELLO
+writeln("HELLO".lower())      // hello
+writeln("  hi  ".trim())      // hi
+```
+
+- `length` — the number of characters, as an `int`.
+- `upper()` — an uppercased copy.
+- `lower()` — a lowercased copy.
+- `trim()` — a copy with leading and trailing whitespace removed.
+
+Strings are immutable: assigning to a string member is a run-time error.
