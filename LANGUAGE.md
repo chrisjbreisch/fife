@@ -473,3 +473,36 @@ writeln((-1.5).abs())         // 1.5
 - `abs()` — the absolute value.
 
 Numbers are immutable: assigning to a number member is a run-time error.
+
+## Lists
+
+`List(...)` creates a native, resizable list. Any arguments become its initial items:
+
+```fife
+var empty = List()
+var numbers = List(1, 2, 3)
+writeln(numbers)   // [1, 2, 3]
+```
+
+Lists expose members the same way strings and numbers do:
+
+- `length` — the number of items, as an `int`.
+- `get(index)` — the item at `index`.
+- `set(index, value)` — replaces the item at `index`, and returns `value`.
+- `add(value)` — appends `value`.
+- `remove(value)` — removes the first item equal to `value`; returns `true` if one was removed.
+- `removeAt(index)` — removes and returns the item at `index`.
+- `contains(value)` — whether any item equals `value`.
+- `indexOf(value)` — the index of the first item equal to `value`, or `-1`.
+
+`get`, `set`, and `removeAt` report a run-time error for a non-integer or out-of-range index.
+Lists have no settable fields — assigning to `list.name` is a run-time error; use `set` instead.
+
+There is no dedicated loop syntax for lists yet, so iterate with an ordinary `for` loop:
+
+```fife
+var names = List("Ann", "Bo", "Cy")
+for (var i = 0; i < names.length; i = i + 1) {
+    writeln(names.get(i))
+}
+```

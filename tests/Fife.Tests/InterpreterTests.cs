@@ -385,6 +385,78 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void CreatesAndPrintsAList()
+    {
+        Assert.AreEqual("[1, 2, 3]\n[]", Run("writeln(List(1, 2, 3))\nwriteln(List())\n"));
+    }
+
+    [TestMethod]
+    public void AddsAndGetsListItems()
+    {
+        Assert.AreEqual("2\na\nb", Run(
+            "var list = List()\n"
+            + "list.add(\"a\")\nlist.add(\"b\")\n"
+            + "writeln(list.length)\nwriteln(list.get(0))\nwriteln(list.get(1))\n"));
+    }
+
+    [TestMethod]
+    public void SetsAListItemByIndex()
+    {
+        Assert.AreEqual("[1, 9, 3]", Run("var list = List(1, 2, 3)\nlist.set(1, 9)\nwriteln(list)\n"));
+    }
+
+    [TestMethod]
+    public void RemovesAListItemByValueAndByIndex()
+    {
+        Assert.AreEqual("true\nfalse\n[2, 3]\nb\n[a, c]", Run(
+            "var list = List(1, 2, 3)\n"
+            + "writeln(list.remove(1))\nwriteln(list.remove(99))\nwriteln(list)\n"
+            + "var letters = List(\"a\", \"b\", \"c\")\n"
+            + "writeln(letters.removeAt(1))\nwriteln(letters)\n"));
+    }
+
+    [TestMethod]
+    public void FindsItemsInAList()
+    {
+        Assert.AreEqual("true\nfalse\n1\n-1", Run(
+            "var list = List(\"a\", \"b\", \"c\")\n"
+            + "writeln(list.contains(\"b\"))\nwriteln(list.contains(\"z\"))\n"
+            + "writeln(list.indexOf(\"b\"))\nwriteln(list.indexOf(\"z\"))\n"));
+    }
+
+    [TestMethod]
+    public void IteratesOverAListWithAForLoop()
+    {
+        Assert.AreEqual("a\nb\nc", Run(
+            "var list = List(\"a\", \"b\", \"c\")\n"
+            + "for (var i = 0; i < list.length; i = i + 1) {\nwriteln(list.get(i))\n}\n"));
+    }
+
+    [TestMethod]
+    public void ReportsOutOfRangeListIndices()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var list = List(1, 2)\nwriteln(list.get(5))\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "'index' is out of range.");
+    }
+
+    [TestMethod]
+    public void ReportsAssigningToAListField()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var list = List()\nlist.length = 5\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Lists have no settable fields; use set(index, value).");
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

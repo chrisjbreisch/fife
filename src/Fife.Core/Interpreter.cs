@@ -117,6 +117,7 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             else interpreter.Output.WriteLine();
             return null;
         });
+        DefineNative("List", 0, 255, (_, arguments) => new FifeListInstance(arguments));
     }
 
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)

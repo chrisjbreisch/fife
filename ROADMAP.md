@@ -15,7 +15,7 @@ call-stack tracing, and exception handling.
 
 ## 1. Indexing
 
-Add indexing before collection types are implemented:
+Add indexing before the remaining collection types are implemented:
 
 - Parse `value[index]`.
 - Add indexed assignment, `value[index] = newValue`.
@@ -23,11 +23,15 @@ Add indexing before collection types are implemented:
 - Define index error behavior through the exception system.
 - Make the protocol usable by lists, strings, vectors, and matrices.
 
+`List` shipped ahead of this using method calls (`get`/`set`) instead of `[...]`, since the host
+object protocol already covered it. `[...]` syntax can be layered on top of `List` later without
+changing its `get`/`set` semantics.
+
 ## 2. Standard Library Objects
 
-Implement native-backed objects after the object protocol and indexing are stable:
+Implement native-backed objects using the host object protocol:
 
-- `List`
+- `List` — done; see Completed Foundations.
 - `Stack`
 - `Queue`
 - `Matrix`
@@ -62,7 +66,10 @@ runtime errors.
 - A built-in `Exception` class, `throw`, and `try` / `catch (Type name)` matched by walking
   `ClassDefinition.Superclass`
 - An `IFifeObject` protocol for `Get`/`Set` behavior, implemented by `ClassInstance` and extended
-  to strings (`length`, `upper()`, `lower()`, `trim()`)
+  to strings (`length`, `upper()`, `lower()`, `trim()`, `substring()`, `replace()`) and numbers
+  (`round()`, `floor()`, `ceil()`, `abs()`)
+- A native `List` type (`FifeListInstance`) built on the `IFifeObject` protocol, with
+  `length`/`get`/`set`/`add`/`remove`/`removeAt`/`contains`/`indexOf`
 
 ## Deliberately Deferred
 
