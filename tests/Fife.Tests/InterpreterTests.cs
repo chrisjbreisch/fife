@@ -360,6 +360,31 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ExtractsASubstring()
+    {
+        Assert.AreEqual("hello\nllo", Run(
+            "writeln(\"hello world\".substring(0, 5))\nwriteln(\"hello\".substring(2))\n"));
+    }
+
+    [TestMethod]
+    public void ReportsOutOfRangeSubstringIndices()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("writeln(\"hi\".substring(0, 5))\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "'end' is out of range.");
+    }
+
+    [TestMethod]
+    public void ReplacesAllOccurrencesInAString()
+    {
+        Assert.AreEqual("hxllb", Run("writeln(\"hello\".replace(\"e\", \"x\").replace(\"o\", \"b\"))\n"));
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

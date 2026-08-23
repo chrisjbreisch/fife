@@ -437,12 +437,21 @@ writeln("hello".length)       // 5
 writeln("hello".upper())      // HELLO
 writeln("HELLO".lower())      // hello
 writeln("  hi  ".trim())      // hi
+writeln("hello world".substring(0, 5))  // hello
+writeln("hello".substring(2))           // llo
+writeln("hello".replace("l", "L"))      // heLLo
 ```
 
 - `length` — the number of characters, as an `int`.
 - `upper()` — an uppercased copy.
 - `lower()` — a lowercased copy.
 - `trim()` — a copy with leading and trailing whitespace removed.
+- `substring(start)` — the characters from `start` to the end.
+- `substring(start, end)` — the characters from `start` up to but not including `end`.
+- `replace(target, replacement)` — a copy with every occurrence of `target` replaced.
+
+`substring` reports a run-time error for an out-of-range or negative index, or an `end` before
+`start`.
 
 Strings are immutable: assigning to a string member is a run-time error.
 
