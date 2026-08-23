@@ -452,6 +452,20 @@ writeln(atan2(1, 1).round(4))  // 0.7854
 
 Each of these reports a run-time error if its argument isn't a number.
 
+### `exp(x)`
+
+Returns e raised to the power `x`.
+
+### `log(x)` and `log(x, base)`
+
+Returns the natural logarithm of `x`. With two arguments, returns the logarithm of `x` in the
+given `base` instead. There is no separate `sqrt`/`pow` — use `^` and `log`/`exp`.
+
+```fife
+writeln(log(exp(1)))     // 1
+writeln(log(8, 2))       // 3
+```
+
 ### String members
 
 Strings expose members through the same `value.name` syntax used for class instances:

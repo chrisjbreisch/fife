@@ -832,6 +832,36 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ComputesExp()
+    {
+        Assert.AreEqual("1\n2.7183", Run("writeln(exp(0))\nwriteln(exp(1).round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesNaturalLog()
+    {
+        Assert.AreEqual("0\n1", Run("writeln(log(1))\nwriteln(log(exp(1)).round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ComputesLogWithAnExplicitBase()
+    {
+        Assert.AreEqual("3\n2", Run("writeln(log(8, 2))\nwriteln(log(100, 10).round(4))\n"));
+    }
+
+    [TestMethod]
+    public void ReportsANonNumberArgumentToLog()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("log(\"x\")\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "log() expects a number.");
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

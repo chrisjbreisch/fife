@@ -147,6 +147,16 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             Math.Atan2(
                 RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan2"),
                 RequireNumber(arguments[1], interpreter.CurrentCallSite!, "atan2")));
+
+        DefineNative("exp", 1, (interpreter, arguments) =>
+            Math.Exp(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "exp")));
+        DefineNative("log", 1, 2, (interpreter, arguments) =>
+        {
+            var value = RequireNumber(arguments[0], interpreter.CurrentCallSite!, "log");
+            return arguments.Count == 2
+                ? Math.Log(value, RequireNumber(arguments[1], interpreter.CurrentCallSite!, "log"))
+                : Math.Log(value);
+        });
     }
 
     private static double RequireNumber(object? argument, Token token, string function) =>
