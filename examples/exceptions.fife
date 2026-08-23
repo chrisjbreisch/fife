@@ -11,14 +11,14 @@ fun requirePositive(n) {
 try {
   requirePositive(-5)
 } catch (Exception e) {
-  writeln("caught: " + e.message)
+  Con.writeln("caught: " + e.message)
 }
 
 // A catch (Exception e) catches every built-in and user-defined subclass.
 try {
   throw Exception("something went wrong")
 } catch (Exception e) {
-  writeln("caught: " + e.message)
+  Con.writeln("caught: " + e.message)
 }
 
 // File and Web failures are also catchable, since FileException and WebException
@@ -26,11 +26,11 @@ try {
 try {
   File("no-such-file.txt").read()
 } catch (Exception e) {
-  writeln("caught: " + e.message)
+  Con.writeln("caught: " + e.message)
 }
 
 // An exception that no enclosing catch matches stops the program.
 // (Left commented out so this file runs to completion.)
 // throw Exception("uncaught")
 
-writeln("done")
+Con.writeln("done")

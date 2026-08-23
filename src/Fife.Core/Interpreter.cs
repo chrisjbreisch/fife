@@ -102,36 +102,43 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     /// <summary>Registers a host function that fife code can call by name.</summary>
     public void DefineNative(string name, int arity, Func<Interpreter, List<object?>, object?> body) =>
-        Globals.Define(name, new NativeFunction(name, arity, arity, body));
+        Globals.Define(name, CreateNative(name, arity, arity, body));
 
     public void DefineNative(string name, int minArity, int maxArity, Func<Interpreter, List<object?>, object?> body) 
-        => Globals.Define(name, new NativeFunction(name, minArity, maxArity, body));
+        => Globals.Define(name, CreateNative(name, minArity, maxArity, body));
+
+    private static NativeFunction CreateNative(
+        string name, int minArity, int maxArity, Func<Interpreter, List<object?>, object?> body) =>
+        new(name, minArity, maxArity, body);
 
     private void DefineStandardLibrary()
     {
-        DefineNative("clock", 0, (_, _) 
-            => (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0);
-        DefineNative("read", 0, 1, (interpreter, arguments) =>
+        var con = new Dictionary<string, ICallable>
         {
-            WritePrompt(interpreter, arguments);
-            return interpreter.Input.Read();
-        });
-        DefineNative("readln", 0, 1, (interpreter, arguments) =>
-        {
-            WritePrompt(interpreter, arguments);
-            return interpreter.Input.ReadLine();
-        });
-        DefineNative("write", 0, 1, (interpreter, arguments) =>
-        {
-            if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
-            return null;
-        });
-        DefineNative("writeln", 0, 1, (interpreter, arguments) =>
-        {
-            if (arguments.Count == 1) interpreter.Output.WriteLine(Stringify(arguments[0]));
-            else interpreter.Output.WriteLine();
-            return null;
-        });
+            ["read"] = CreateNative("read", 0, 1, (interpreter, arguments) =>
+            {
+                WritePrompt(interpreter, arguments);
+                return interpreter.Input.Read();
+            }),
+            ["readln"] = CreateNative("readln", 0, 1, (interpreter, arguments) =>
+            {
+                WritePrompt(interpreter, arguments);
+                return interpreter.Input.ReadLine();
+            }),
+            ["write"] = CreateNative("write", 0, 1, (interpreter, arguments) =>
+            {
+                if (arguments.Count == 1) interpreter.Output.Write(Stringify(arguments[0]));
+                return null;
+            }),
+            ["writeln"] = CreateNative("writeln", 0, 1, (interpreter, arguments) =>
+            {
+                if (arguments.Count == 1) interpreter.Output.WriteLine(Stringify(arguments[0]));
+                else interpreter.Output.WriteLine();
+                return null;
+            })
+        };
+        Globals.Define("Con", new FifeStandardLibrary("Con", con));
+
         DefineNative("List", 0, 255, (_, arguments) => new FifeListInstance(arguments));
         DefineNative("Stack", 0, 255, (_, arguments) => new FifeStackInstance(arguments));
         DefineNative("Queue", 0, 255, (_, arguments) => new FifeQueueInstance(arguments));
@@ -148,33 +155,41 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
         DefineNative("Directory", 1, (interpreter, arguments) =>
             new FifeDirectoryInstance(RequireString(arguments[0], interpreter.CurrentCallSite!, "Directory")));
 
-        DefineNative("pi", 0, (_, _) => Math.PI);
-        DefineNative("sin", 1, (interpreter, arguments) =>
-            Math.Sin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "sin")));
-        DefineNative("cos", 1, (interpreter, arguments) =>
-            Math.Cos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "cos")));
-        DefineNative("tan", 1, (interpreter, arguments) =>
-            Math.Tan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "tan")));
-        DefineNative("asin", 1, (interpreter, arguments) =>
-            Math.Asin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "asin")));
-        DefineNative("acos", 1, (interpreter, arguments) =>
-            Math.Acos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "acos")));
-        DefineNative("atan", 1, (interpreter, arguments) =>
-            Math.Atan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan")));
-        DefineNative("atan2", 2, (interpreter, arguments) =>
-            Math.Atan2(
-                RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan2"),
-                RequireNumber(arguments[1], interpreter.CurrentCallSite!, "atan2")));
-
-        DefineNative("exp", 1, (interpreter, arguments) =>
-            Math.Exp(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "exp")));
-        DefineNative("log", 1, 2, (interpreter, arguments) =>
+        var math = new Dictionary<string, ICallable>
         {
-            var value = RequireNumber(arguments[0], interpreter.CurrentCallSite!, "log");
-            return arguments.Count == 2
-                ? Math.Log(value, RequireNumber(arguments[1], interpreter.CurrentCallSite!, "log"))
-                : Math.Log(value);
-        });
+            ["pi"] = CreateNative("pi", 0, 0, (_, _) => Math.PI),
+            ["sin"] = CreateNative("sin", 1, 1, (interpreter, arguments) =>
+                Math.Sin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "sin"))),
+            ["cos"] = CreateNative("cos", 1, 1, (interpreter, arguments) =>
+                Math.Cos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "cos"))),
+            ["tan"] = CreateNative("tan", 1, 1, (interpreter, arguments) =>
+                Math.Tan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "tan"))),
+            ["asin"] = CreateNative("asin", 1, 1, (interpreter, arguments) =>
+                Math.Asin(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "asin"))),
+            ["acos"] = CreateNative("acos", 1, 1, (interpreter, arguments) =>
+                Math.Acos(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "acos"))),
+            ["atan"] = CreateNative("atan", 1, 1, (interpreter, arguments) =>
+                Math.Atan(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan"))),
+            ["atan2"] = CreateNative("atan2", 2, 2, (interpreter, arguments) =>
+                Math.Atan2(
+                    RequireNumber(arguments[0], interpreter.CurrentCallSite!, "atan2"),
+                    RequireNumber(arguments[1], interpreter.CurrentCallSite!, "atan2"))),
+            ["exp"] = CreateNative("exp", 1, 1, (interpreter, arguments) =>
+                Math.Exp(RequireNumber(arguments[0], interpreter.CurrentCallSite!, "exp"))),
+            ["log"] = CreateNative("log", 1, 2, (interpreter, arguments) =>
+            {
+                var value = RequireNumber(arguments[0], interpreter.CurrentCallSite!, "log");
+                return arguments.Count == 2
+                    ? Math.Log(value, RequireNumber(arguments[1], interpreter.CurrentCallSite!, "log"))
+                    : Math.Log(value);
+            })
+        };
+        Globals.Define("Math", new FifeStandardLibrary("Math", math));
+        Globals.Define("System", new FifeStandardLibrary("System", new Dictionary<string, ICallable>
+        {
+            ["clock"] = CreateNative("clock", 0, 0,
+                (_, _) => (double)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0)
+        }));
     }
 
     private static double RequireNumber(object? argument, Token token, string function) =>

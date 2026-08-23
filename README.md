@@ -36,6 +36,10 @@ binds each variable reference to its declaring scope before execution. All diagn
 `Vector` and `Matrix` are backed by [MathNet.Numerics](https://numerics.mathdotnet.com/), a
 dependency of `src/Fife.Core`.
 
+Standard-library functions are grouped by namespace: use `Con.write`/`Con.writeln` and
+`Con.read`/`Con.readln` for console I/O, `Math` for logarithmic and trigonometric functions, and
+`System.clock()` for Unix time. These functions are not available as top-level names.
+
 ## Build and run
 
 ```pwsh

@@ -1,26 +1,26 @@
 // A quick tour of what fife can do today.
 
-writeln("hello from fife")
+Con.writeln("hello from fife")
 
 var greeting = "hi"
 var name = "world"
-writeln(greeting + ", " + name + "!")
+Con.writeln(greeting + ", " + name + "!")
 
 // Blocks and scoping.
 {
   var name = "block"
-  writeln(greeting + ", " + name + "!")
+  Con.writeln(greeting + ", " + name + "!")
 }
 
 // Control flow.
 for (var i = 1; i <= 5; i = i + 1) {
-  if (i < 3) writeln("small: " + i)
-  else writeln("big: " + i)
+  if (i < 3) Con.writeln("small: " + i)
+  else Con.writeln("big: " + i)
 }
 
 var n = 3
 while (n > 0) {
-  writeln(n)
+  Con.writeln(n)
   n = n - 1
 }
 
@@ -30,7 +30,7 @@ int fun fib(int n) {
   return fib(n - 1) + fib(n - 2)
 }
 
-for (var i = 0; i < 10; i = i + 1) writeln(fib(i))
+for (var i = 0; i < 10; i = i + 1) Con.writeln(fib(i))
 
 fun makeCounter() {
   int count = 0
@@ -42,8 +42,8 @@ fun makeCounter() {
 }
 
 var counter = makeCounter()
-writeln(counter())
-writeln(counter())
+Con.writeln(counter())
+Con.writeln(counter())
 
 // Classes and inheritance.
 class Animal {
@@ -52,7 +52,7 @@ class Animal {
   }
 
   speak() {
-    writeln(this.name + " makes a sound")
+    Con.writeln(this.name + " makes a sound")
   }
 }
 
@@ -63,11 +63,11 @@ class Dog : Animal {
 
   speak() {
     super.speak()
-    writeln(this.name + " barks")
+    Con.writeln(this.name + " barks")
   }
 }
 
 Dog("Rex").speak()
 
 // Native functions provided by the host.
-writeln(clock())
+Con.writeln(System.clock())

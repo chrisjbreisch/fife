@@ -10,6 +10,49 @@ public sealed class InterpreterTests
 {
     private static string Run(string source)
     {
+        source = source.Replace("Con.writeln(", "__CON_WRITELN__(")
+            .Replace("Math.sin(", "__MATH_SIN__(")
+            .Replace("Math.cos(", "__MATH_COS__(")
+            .Replace("Math.tan(", "__MATH_TAN__(")
+            .Replace("Math.asin(", "__MATH_ASIN__(")
+            .Replace("Math.acos(", "__MATH_ACOS__(")
+            .Replace("Math.atan2(", "__MATH_ATAN2__(")
+            .Replace("Math.atan(", "__MATH_ATAN__(")
+            .Replace("Math.exp(", "__MATH_EXP__(")
+            .Replace("Math.log(", "__MATH_LOG__(")
+            .Replace("Math.pi(", "__MATH_PI__(")
+            .Replace("System.clock(", "__SYSTEM_CLOCK__(")
+            .Replace("asin(", "__ASIN__(")
+            .Replace("acos(", "__ACOS__(")
+            .Replace("atan2(", "__ATAN2__(")
+            .Replace("atan(", "__ATAN__(")
+            .Replace("writeln(", "Con.writeln(")
+            .Replace("atan2(", "Math.atan2(")
+            .Replace("asin(", "Math.asin(")
+            .Replace("acos(", "Math.acos(")
+            .Replace("atan(", "Math.atan(")
+            .Replace("sin(", "Math.sin(")
+            .Replace("cos(", "Math.cos(")
+            .Replace("tan(", "Math.tan(")
+            .Replace("pi(", "Math.pi(")
+            .Replace("exp(", "Math.exp(")
+            .Replace("log(", "Math.log(")
+            .Replace("__CON_WRITELN__(", "Con.writeln(")
+            .Replace("__MATH_SIN__(", "Math.sin(")
+            .Replace("__MATH_COS__(", "Math.cos(")
+            .Replace("__MATH_TAN__(", "Math.tan(")
+            .Replace("__MATH_ASIN__(", "Math.asin(")
+            .Replace("__MATH_ACOS__(", "Math.acos(")
+            .Replace("__MATH_ATAN2__(", "Math.atan2(")
+            .Replace("__MATH_ATAN__(", "Math.atan(")
+            .Replace("__MATH_EXP__(", "Math.exp(")
+            .Replace("__MATH_LOG__(", "Math.log(")
+            .Replace("__MATH_PI__(", "Math.pi(")
+            .Replace("__ASIN__(", "Math.asin(")
+            .Replace("__ACOS__(", "Math.acos(")
+            .Replace("__ATAN2__(", "Math.atan2(")
+            .Replace("__ATAN__(", "Math.atan(")
+            .Replace("__SYSTEM_CLOCK__(", "System.clock(");
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
@@ -95,10 +138,29 @@ public sealed class InterpreterTests
         StringReader input = new("xy\n");
         FifeEngine engine = new(errors, output, input);
 
-        engine.Run("write(\"a\")\nwriteln(\"b\")\nwriteln()\nwriteln(read(\"r:\"))\nwriteln(readln(\"l:\"))\n");
+        engine.Run("Con.write(\"a\")\nCon.writeln(\"b\")\nCon.writeln()\nCon.writeln(Con.read(\"r:\"))\nCon.writeln(Con.readln(\"l:\"))\n");
 
         Assert.AreEqual("ab\n\nr:120\nl:y\n", output.ToString().ReplaceLineEndings("\n"));
         Assert.IsFalse(engine.HadError);
+    }
+
+    [TestMethod]
+    public void StandardLibraryFunctionsAreNamespaced()
+    {
+        Assert.AreEqual("1\ntrue", Run("Con.writeln(Math.sin(Math.pi() / 2).round(4))\nCon.writeln(System.clock() > 0)\n"));
+    }
+
+    [TestMethod]
+    public void StandardLibraryFunctionsAreNotGlobal()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+
+        engine.Run("writeln(1)\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Undefined variable 'writeln'.");
     }
 
     [TestMethod]
@@ -108,7 +170,7 @@ public sealed class InterpreterTests
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
 
-        engine.RunRepl("writeln(3)");
+        engine.RunRepl("Con.writeln(3)");
 
         Assert.AreEqual("3\n", output.ToString().ReplaceLineEndings("\n"));
         Assert.IsFalse(engine.HadError);
@@ -125,7 +187,7 @@ public sealed class InterpreterTests
         Assert.AreEqual("", output.ToString());
         Assert.IsFalse(engine.HadError);
 
-        engine.RunRepl("writeln(3)");
+        engine.RunRepl("Con.writeln(3)");
         engine.RunRepl("}");
 
         Assert.AreEqual("3\n", output.ToString().ReplaceLineEndings("\n"));
@@ -205,7 +267,7 @@ public sealed class InterpreterTests
 
         foreach (var line in new[]
         {
-            "var a = \"global\"", "{", "fun showA() {", "writeln(a)", "}",
+            "var a = \"global\"", "{", "fun showA() {", "Con.writeln(a)", "}",
             "showA()", "var a = \"block\"", "showA()", "}"
         })
         {
@@ -331,7 +393,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var x = true\nwriteln(x.field)\n");
+        engine.Run("var x = true\nCon.writeln(x.field)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Only class instances, strings, and numbers have properties.");
@@ -375,7 +437,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(\"hi\".substring(0, 5))\n");
+        engine.Run("Con.writeln(\"hi\".substring(0, 5))\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "'end' is out of range.");
@@ -441,7 +503,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var list = List(1, 2)\nwriteln(list.get(5))\n");
+        engine.Run("var list = List(1, 2)\nCon.writeln(list.get(5))\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "'index' is out of range.");
@@ -469,7 +531,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var list = List(1, 2)\nwriteln(list[5])\n");
+        engine.Run("var list = List(1, 2)\nCon.writeln(list[5])\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "'index' is out of range.");
@@ -481,7 +543,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var x = 1\nwriteln(x[0])\n");
+        engine.Run("var x = 1\nCon.writeln(x[0])\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Only indexable values support '[]'.");
@@ -612,7 +674,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("var map = Map()\nwriteln(map[\"missing\"])\n");
+        engine.Run("var map = Map()\nCon.writeln(map[\"missing\"])\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Key not found.");
@@ -813,7 +875,7 @@ public sealed class InterpreterTests
     public void ComputesInverseTrigValues()
     {
         Assert.AreEqual("1.5708\n0\n0.7854", Run(
-            "writeln(asin(1).round(4))\nwriteln(acos(1))\nwriteln(atan(1).round(4))\n"));
+            "Con.writeln(Math.asin(1).round(4))\nCon.writeln(Math.acos(1))\nCon.writeln(Math.atan(1).round(4))\n"));
     }
 
     [TestMethod]
@@ -828,7 +890,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("sin(\"x\")\n");
+        engine.Run("Math.sin(\"x\")\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "sin() expects a number.");
@@ -858,7 +920,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("log(\"x\")\n");
+        engine.Run("Math.log(\"x\")\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "log() expects a number.");
@@ -1014,7 +1076,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(\"hello\".missing)\n");
+        engine.Run("Con.writeln(\"hello\".missing)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Undefined property 'missing'.");
@@ -1051,7 +1113,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(1.5.missing)\n");
+        engine.Run("Con.writeln(1.5.missing)\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Undefined property 'missing'.");
@@ -1075,7 +1137,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(this)\n");
+        engine.Run("Con.writeln(this)\n");
 
         Assert.IsTrue(engine.HadError);
         StringAssert.Contains(output.ToString(), "Can't use 'this' outside of a class.");
@@ -1201,7 +1263,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(super.foo)\n");
+        engine.Run("Con.writeln(super.foo)\n");
 
         Assert.IsTrue(engine.HadError);
         StringAssert.Contains(output.ToString(), "Can't use 'super' outside of a class.");
@@ -1374,7 +1436,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(1 - \"two\")\n");
+        engine.Run("Con.writeln(1 - \"two\")\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Operands must be numbers.");
@@ -1386,7 +1448,7 @@ public sealed class InterpreterTests
         StringWriter output = new();
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
-        engine.Run("writeln(1 +)\n");
+        engine.Run("Con.writeln(1 +)\n");
 
         Assert.IsTrue(engine.HadError);
     }
@@ -1435,7 +1497,7 @@ public sealed class InterpreterTests
         ConsoleErrorReporter errors = new(output);
         FifeEngine engine = new(errors, output);
         engine.Run(
-            "try {\nwriteln(1 - \"two\")\n} catch (Exception e) {\nwriteln(\"never\")\n}\n");
+            "try {\nCon.writeln(1 - \"two\")\n} catch (Exception e) {\nCon.writeln(\"never\")\n}\n");
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Operands must be numbers.");

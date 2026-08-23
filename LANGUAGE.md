@@ -73,7 +73,8 @@ Supported statement forms are:
 - `for`
 - `return`
 
-The former `print` statement is not part of the language. Use `writeln(...)` or `write(...)`.
+The former `print` statement is not part of the language. Use `Con.writeln(...)` or
+`Con.write(...)`.
 
 ## Scope
 
@@ -405,68 +406,72 @@ Line comments begin with `//`. Block comments use `/*` and `*/` and may be neste
 
 ## Standard Library
 
-### `clock()`
+The standard library is grouped into three namespace objects: `Con` for console input and output,
+`Math` for logarithmic and trigonometric functions, and `System` for system functions such as the
+clock. These names are intentionally not available as top-level functions.
+
+### `System.clock()`
 
 Returns the current Unix time in seconds.
 
-### `read()` and `read(prompt)`
+### `Con.read()` and `Con.read(prompt)`
 
 Reads one character and returns its numeric character code. With one argument, writes the argument
 as a prompt before reading.
 
-### `readln()` and `readln(prompt)`
+### `Con.readln()` and `Con.readln(prompt)`
 
 Reads a complete line. With one argument, writes the argument as a prompt before reading.
 
-### `write()` and `write(value)`
+### `Con.write()` and `Con.write(value)`
 
 Writes no value with zero arguments, or one value without a trailing newline with one argument.
 
-### `writeln()` and `writeln(value)`
+### `Con.writeln()` and `Con.writeln(value)`
 
 Writes a newline with zero arguments, or one value followed by a newline with one argument.
 
 ```fife
-string name = readln("Name: ")
-writeln("Hello, " + name)
+string name = Con.readln("Name: ")
+Con.writeln("Hello, " + name)
 ```
 
-### `pi()`
+### `Math.pi()`
 
 Returns π.
 
-### `sin(x)`, `cos(x)`, `tan(x)`
+### `Math.sin(x)`, `Math.cos(x)`, `Math.tan(x)`
 
 The standard trigonometric functions. `x` is in radians.
 
-### `asin(x)`, `acos(x)`, `atan(x)`
+### `Math.asin(x)`, `Math.acos(x)`, `Math.atan(x)`
 
 The inverse trigonometric functions. `x` is a ratio; the result is in radians.
 
-### `atan2(y, x)`
+### `Math.atan2(y, x)`
 
 The angle, in radians, of the point `(x, y)` from the positive x-axis. Unlike `atan(y / x)`, it
 uses the sign of both arguments to pick the correct quadrant.
 
 ```fife
-writeln(sin(pi() / 2))     // 1
-writeln(atan2(1, 1).round(4))  // 0.7854
+Con.writeln(Math.sin(Math.pi() / 2))     // 1
+Con.writeln(Math.atan2(1, 1).round(4))   // 0.7854
 ```
 
 Each of these reports a run-time error if its argument isn't a number.
 
-### `exp(x)`
+### `Math.exp(x)`
 
 Returns e raised to the power `x`.
 
-### `log(x)` and `log(x, base)`
+### `Math.log(x)` and `Math.log(x, base)`
 
 Returns the natural logarithm of `x`. With two arguments, returns the logarithm of `x` in the
 given `base` instead. There is no separate `sqrt`/`pow` — use `^` and `log`/`exp`.
 
 ```fife
-writeln(log(exp(1)))     // 1
-writeln(log(8, 2))       // 3
+Con.writeln(Math.log(Math.exp(1)))     // 1
+Con.writeln(Math.log(8, 2))            // 3
 ```
 
 ## Files

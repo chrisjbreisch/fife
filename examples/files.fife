@@ -5,19 +5,19 @@ var notes = File("fife-example.txt")
 notes.write("first line, ")
 notes.append("second line")
 
-writeln(notes.exists())          // true
-writeln(notes.path)              // fife-example.txt
-writeln(notes.size())            // size in bytes
-writeln(notes.modifiedTime() > 0) // true
-writeln(notes.read())
+Con.writeln(notes.exists())          // true
+Con.writeln(notes.path)              // fife-example.txt
+Con.writeln(notes.size())            // size in bytes
+Con.writeln(notes.modifiedTime() > 0) // true
+Con.writeln(notes.read())
 
 var here = Directory(".")
-writeln(here.exists())           // true
-writeln(here.list().contains("fife-example.txt")) // true
+Con.writeln(here.exists())           // true
+Con.writeln(here.list().contains("fife-example.txt")) // true
 
 // A missing file reports a catchable FileException instead of crashing the script.
 try {
   File("no-such-file.txt").read()
 } catch (Exception e) {
-  writeln("caught: " + e.message)
+  Con.writeln("caught: " + e.message)
 }

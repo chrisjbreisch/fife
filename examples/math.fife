@@ -1,22 +1,22 @@
 // Numbers, Vector, and Matrix.
 
-writeln(3.14159.round(2))   // 3.14
-writeln(3.7.floor())        // 3
-writeln((-2.5).abs())       // 2.5
+Con.writeln(3.14159.round(2))   // 3.14
+Con.writeln(3.7.floor())        // 3
+Con.writeln((-2.5).abs())       // 2.5
 
-writeln(sin(pi() / 2))          // 1
-writeln(atan2(1, 1).round(4))   // 0.7854
-writeln(log(exp(1)))            // 1
-writeln(log(8, 2))              // 3
+Con.writeln(Math.sin(Math.pi() / 2))          // 1
+Con.writeln(Math.atan2(1, 1).round(4))        // 0.7854
+Con.writeln(Math.log(Math.exp(1)))            // 1
+Con.writeln(Math.log(8, 2))                   // 3
 
 var v = Vector(3, 4)
-writeln(v.magnitude())      // 5
-writeln(v.normalize())      // Vector[0.6, 0.8]
-writeln(Vector(1, 2).add(Vector(3, 4)))  // Vector[4, 6]
-writeln(Vector(1, 2, 3).dot(Vector(4, 5, 6))) // 32
+Con.writeln(v.magnitude())      // 5
+Con.writeln(v.normalize())      // Vector[0.6, 0.8]
+Con.writeln(Vector(1, 2).add(Vector(3, 4)))  // Vector[4, 6]
+Con.writeln(Vector(1, 2, 3).dot(Vector(4, 5, 6))) // 32
 
 var m = Matrix(List(1, 2), List(3, 4))
-writeln(m)                  // Matrix[[1, 2], [3, 4]]
-writeln(m.determinant())    // -2
-writeln(m.transpose())      // Matrix[[1, 3], [2, 4]]
-writeln(m.multiply(Vector(1, 1))) // Vector[3, 7]
+Con.writeln(m)                  // Matrix[[1, 2], [3, 4]]
+Con.writeln(m.determinant())    // -2
+Con.writeln(m.transpose())      // Matrix[[1, 3], [2, 4]]
+Con.writeln(m.multiply(Vector(1, 1))) // Vector[3, 7]

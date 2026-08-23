@@ -1,12 +1,12 @@
 // String members.
 
 var greeting = "  Hello, Fife!  "
-writeln(greeting.trim())          // Hello, Fife!
-writeln(greeting.trim().upper())  // HELLO, FIFE!
-writeln(greeting.trim().lower())  // hello, fife!
-writeln(greeting.length)          // 16
+Con.writeln(greeting.trim())          // Hello, Fife!
+Con.writeln(greeting.trim().upper())  // HELLO, FIFE!
+Con.writeln(greeting.trim().lower())  // hello, fife!
+Con.writeln(greeting.length)          // 16
 
 var sentence = "the quick brown fox"
-writeln(sentence.substring(4, 9))       // quick
-writeln(sentence.substring(10))         // brown fox
-writeln(sentence.replace("quick", "slow")) // the slow brown fox
+Con.writeln(sentence.substring(4, 9))       // quick
+Con.writeln(sentence.substring(10))         // brown fox
+Con.writeln(sentence.replace("quick", "slow")) // the slow brown fox
