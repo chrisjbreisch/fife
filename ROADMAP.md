@@ -20,7 +20,7 @@ Implement native-backed objects using the host object protocol:
 - `List` — done; see Completed Foundations.
 - `Stack` — done; see Completed Foundations.
 - `Queue` — done; see Completed Foundations.
-- `Dictionary`/`Map` — planned next, using the `IFifeIndexable` protocol for `map[key]` access.
+- `Map` — done; see Completed Foundations.
 - `Matrix`
 - `Vector`
 
@@ -62,6 +62,9 @@ runtime errors.
 - `[...]` indexing: `value[index]` and `value[index] = newValue`, via a new `IFifeIndexable`
   protocol (`GetIndex`/`SetIndex`). `List` implements it alongside its existing `get`/`set`
   methods; both do the same range/type checking.
+- A native `Map` type (`FifeMapInstance`), backed by a real `Dictionary<object, object?>` and
+  implementing both `IFifeObject` and `IFifeIndexable`, with
+  `length`/`get`/`set`/`containsKey`/`remove`/`keys()`/`values()` (the latter two return `List`s)
 
 ## Deliberately Deferred
 

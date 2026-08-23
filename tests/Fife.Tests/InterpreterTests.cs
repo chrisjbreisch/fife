@@ -569,6 +569,83 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void SetsAndGetsMapEntries()
+    {
+        Assert.AreEqual("1\ntrue\nfalse", Run(
+            "var map = Map()\nmap.set(\"a\", 1)\n"
+            + "writeln(map.get(\"a\"))\nwriteln(map.containsKey(\"a\"))\nwriteln(map.containsKey(\"z\"))\n"));
+    }
+
+    [TestMethod]
+    public void UsesBracketSyntaxForMapEntries()
+    {
+        Assert.AreEqual("1\n2\n1", Run(
+            "var map = Map()\nmap[\"a\"] = 1\nwriteln(map[\"a\"])\n"
+            + "map[\"a\"] = 2\nwriteln(map[\"a\"])\nwriteln(map.length)\n"));
+    }
+
+    [TestMethod]
+    public void RemovesAMapEntry()
+    {
+        Assert.AreEqual("true\nfalse\nfalse", Run(
+            "var map = Map()\nmap.set(\"a\", 1)\n"
+            + "writeln(map.remove(\"a\"))\nwriteln(map.remove(\"a\"))\nwriteln(map.containsKey(\"a\"))\n"));
+    }
+
+    [TestMethod]
+    public void ListsMapKeysAndValues()
+    {
+        Assert.AreEqual("2\ntrue\ntrue\n2\ntrue\ntrue", Run(
+            "var map = Map()\nmap.set(\"a\", 1)\nmap.set(\"b\", 2)\n"
+            + "var keys = map.keys()\nwriteln(keys.length)\n"
+            + "writeln(keys.contains(\"a\"))\nwriteln(keys.contains(\"b\"))\n"
+            + "var values = map.values()\nwriteln(values.length)\n"
+            + "writeln(values.contains(1))\nwriteln(values.contains(2))\n"));
+    }
+
+    [TestMethod]
+    public void ReportsGettingAMissingMapKey()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var map = Map()\nwriteln(map[\"missing\"])\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Key not found.");
+    }
+
+    [TestMethod]
+    public void ReportsANilMapKey()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var map = Map()\nmap[nil] = 1\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Map keys can't be nil.");
+    }
+
+    [TestMethod]
+    public void ReportsAssigningToAMapField()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var map = Map()\nmap.length = 5\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Maps have no settable fields; use set(key, value).");
+    }
+
+    [TestMethod]
+    public void PrintsAMap()
+    {
+        Assert.AreEqual("{a: 1}", Run("var map = Map()\nmap.set(\"a\", 1)\nwriteln(map)\n"));
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

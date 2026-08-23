@@ -559,3 +559,30 @@ writeln(queue.dequeue())  // 2
 - `peek()` — returns the item at the front without removing it.
 
 `dequeue` and `peek` report a run-time error on an empty queue. Queues have no settable fields.
+
+## Maps
+
+`Map()` creates a native hash map, keyed by any value except `nil`. Populate it with `set` or
+`[...]`:
+
+```fife
+var ages = Map()
+ages.set("Ann", 30)
+ages["Bo"] = 25
+
+writeln(ages.get("Ann"))   // 30
+writeln(ages["Bo"])        // 25
+writeln(ages.length)       // 2
+```
+
+- `length` — the number of entries, as an `int`.
+- `get(key)` — the value stored under `key`; a run-time error if `key` isn't present.
+- `set(key, value)` — stores `value` under `key`, replacing any existing entry, and returns
+  `value`.
+- `containsKey(key)` — whether `key` has an entry.
+- `remove(key)` — removes the entry for `key`; returns `true` if one was removed.
+- `keys()` — a `List` of the map's keys.
+- `values()` — a `List` of the map's values.
+
+`[...]` indexing is equivalent to `get`/`set`. Assigning `nil` as a key, or reading a key that
+isn't present, is a run-time error. Maps have no settable fields.
