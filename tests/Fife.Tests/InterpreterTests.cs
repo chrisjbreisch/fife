@@ -567,6 +567,22 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void DoesNotLetATryCatchRecoverFromStackOverflow()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run(
+            "fun f(n) {\nreturn f(n + 1)\n}\n"
+            + "try {\nf(0)\n} catch (Exception e) {\nwriteln(\"never\")\n}\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(
+            output.ToString(),
+            $"Stack overflow: exceeded the maximum call depth of {Interpreter.MaxCallDepth}.");
+    }
+
+    [TestMethod]
     public void TruncatesVeryDeepCallStacks()
     {
         StringWriter output = new();
@@ -687,6 +703,20 @@ public sealed class InterpreterTests
 
         Assert.IsTrue(engine.HadRuntimeError);
         StringAssert.Contains(output.ToString(), "Uncaught exception: nope");
+    }
+
+    [TestMethod]
+    public void DoesNotCatchInterpreterErrorsAsFifeExceptions()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run(
+            "try {\nwriteln(1 - \"two\")\n} catch (Exception e) {\nwriteln(\"never\")\n}\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Operands must be numbers.");
+        StringAssert.DoesNotMatch(output.ToString(), new System.Text.RegularExpressions.Regex("never"));
     }
 
     [TestMethod]

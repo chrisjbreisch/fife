@@ -346,6 +346,26 @@ try {
 An exception that no enclosing `catch` matches stops the program and is reported the same way
 other run-time errors are. `try` does not yet support `finally`.
 
+### Exceptions vs. host errors
+
+`try` / `catch` only ever catches values raised by an explicit `throw`. Failures the interpreter
+raises itself — an undefined variable or property, a bad operand type, exceeding the maximum call
+depth, and the like — are never caught by fife `catch` clauses, no matter how they are typed. They
+always stop the program and print a diagnostic, the same way they did before exceptions existed.
+This mirrors Java's split between `Exception` (recoverable, application-level failures) and
+`Error` (host/runtime failures that a program should not try to recover from): fife just does not
+give the uncatchable side a name yet, since nothing can currently catch it either way.
+
+```fife
+try {
+    writeln(1 - "two")     // interpreter error, not a thrown Exception
+} catch (Exception e) {
+    writeln("never runs")
+}
+```
+
+The program above still stops with `Operands must be numbers.`; the `catch` clause never runs.
+
 ## Errors
 
 A run-time error stops the program and prints the message followed by a call stack, innermost
