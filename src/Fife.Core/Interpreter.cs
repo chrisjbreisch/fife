@@ -118,6 +118,8 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
             return null;
         });
         DefineNative("List", 0, 255, (_, arguments) => new FifeListInstance(arguments));
+        DefineNative("Stack", 0, 255, (_, arguments) => new FifeStackInstance(arguments));
+        DefineNative("Queue", 0, 255, (_, arguments) => new FifeQueueInstance(arguments));
     }
 
     private static void WritePrompt(Interpreter interpreter, List<object?> arguments)

@@ -32,8 +32,8 @@ changing its `get`/`set` semantics.
 Implement native-backed objects using the host object protocol:
 
 - `List` — done; see Completed Foundations.
-- `Stack`
-- `Queue`
+- `Stack` — done; see Completed Foundations.
+- `Queue` — done; see Completed Foundations.
 - `Matrix`
 - `Vector`
 
@@ -70,6 +70,8 @@ runtime errors.
   (`round()`, `floor()`, `ceil()`, `abs()`)
 - A native `List` type (`FifeListInstance`) built on the `IFifeObject` protocol, with
   `length`/`get`/`set`/`add`/`remove`/`removeAt`/`contains`/`indexOf`
+- Native `Stack` (`push`/`pop`/`peek`/`isEmpty`) and `Queue` (`enqueue`/`dequeue`/`peek`/`isEmpty`)
+  types, same `IFifeObject` pattern as `List`
 
 ## Deliberately Deferred
 

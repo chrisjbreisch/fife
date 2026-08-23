@@ -457,6 +457,66 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void PushesAndPopsAStackInLifoOrder()
+    {
+        Assert.AreEqual("3\n2\n1\ntrue", Run(
+            "var stack = Stack(1, 2)\nstack.push(3)\n"
+            + "writeln(stack.pop())\nwriteln(stack.pop())\nwriteln(stack.pop())\nwriteln(stack.isEmpty())\n"));
+    }
+
+    [TestMethod]
+    public void PeeksAStackWithoutRemoving()
+    {
+        Assert.AreEqual("2\n2\n1", Run(
+            "var stack = Stack(1, 2)\nwriteln(stack.peek())\nwriteln(stack.pop())\nwriteln(stack.pop())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsPoppingAnEmptyStack()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var stack = Stack()\nstack.pop()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Can't pop an empty stack.");
+    }
+
+    [TestMethod]
+    public void EnqueuesAndDequeuesAQueueInFifoOrder()
+    {
+        Assert.AreEqual("1\n2\n3\ntrue", Run(
+            "var queue = Queue(1, 2)\nqueue.enqueue(3)\n"
+            + "writeln(queue.dequeue())\nwriteln(queue.dequeue())\nwriteln(queue.dequeue())\nwriteln(queue.isEmpty())\n"));
+    }
+
+    [TestMethod]
+    public void PeeksAQueueWithoutRemoving()
+    {
+        Assert.AreEqual("1\n1\n2", Run(
+            "var queue = Queue(1, 2)\nwriteln(queue.peek())\nwriteln(queue.dequeue())\nwriteln(queue.dequeue())\n"));
+    }
+
+    [TestMethod]
+    public void ReportsDequeuingAnEmptyQueue()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var queue = Queue()\nqueue.dequeue()\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Can't dequeue an empty queue.");
+    }
+
+    [TestMethod]
+    public void PrintsStacksAndQueues()
+    {
+        Assert.AreEqual("Stack[1, 2]\nQueue[1, 2]", Run("writeln(Stack(1, 2))\nwriteln(Queue(1, 2))\n"));
+    }
+
+    [TestMethod]
     public void ReportsAnUndefinedStringProperty()
     {
         StringWriter output = new();

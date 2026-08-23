@@ -506,3 +506,43 @@ for (var i = 0; i < names.length; i = i + 1) {
     writeln(names.get(i))
 }
 ```
+
+## Stacks
+
+`Stack(...)` creates a native, last-in-first-out stack. Any arguments become its initial items,
+pushed in order, so the last argument starts on top:
+
+```fife
+var stack = Stack(1, 2)
+stack.push(3)
+writeln(stack.pop())      // 3
+writeln(stack.pop())      // 2
+```
+
+- `length` — the number of items, as an `int`.
+- `isEmpty()` — whether the stack has no items.
+- `push(value)` — puts `value` on top.
+- `pop()` — removes and returns the top item.
+- `peek()` — returns the top item without removing it.
+
+`pop` and `peek` report a run-time error on an empty stack. Stacks have no settable fields.
+
+## Queues
+
+`Queue(...)` creates a native, first-in-first-out queue. Any arguments become its initial items,
+enqueued in order:
+
+```fife
+var queue = Queue(1, 2)
+queue.enqueue(3)
+writeln(queue.dequeue())  // 1
+writeln(queue.dequeue())  // 2
+```
+
+- `length` — the number of items, as an `int`.
+- `isEmpty()` — whether the queue has no items.
+- `enqueue(value)` — adds `value` at the back.
+- `dequeue()` — removes and returns the item at the front.
+- `peek()` — returns the item at the front without removing it.
+
+`dequeue` and `peek` report a run-time error on an empty queue. Queues have no settable fields.
