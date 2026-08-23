@@ -14,7 +14,7 @@ namespace Fife.Core;
 /// throwStmt   -> "throw" expression terminator
 /// tryStmt     -> "try" block "catch" "(" IDENTIFIER IDENTIFIER ")" block
 /// expression  -> assignment
-/// assignment  -> IDENTIFIER "=" assignment | logic_or
+/// assignment  -> ( call "." )? IDENTIFIER "=" assignment | call "[" expression "]" "=" assignment | logic_or
 /// logic_or    -> logic_and ( "or" logic_and )*
 /// logic_and   -> equality ( "and" equality )*
 /// equality    -> comparison ( ( "!=" | "<>" | "==" ) comparison )*
@@ -24,7 +24,7 @@ namespace Fife.Core;
 /// power       -> postfix ( "^" unary )?
 /// unary       -> ( "!" | "-" ) unary | power
 /// postfix     -> call ( "!" )*
-/// call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )*
+/// call        -> primary ( "(" arguments? ")" | "." IDENTIFIER | "[" expression "]" )*
 /// primary     -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER
 /// </summary>
 public sealed class Parser(List<Token> tokens, IErrorReporter errors)
@@ -315,6 +315,10 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             {
                 return new Expr.Set(get.Object, get.Name, value);
             }
+            else if (expr is Expr.Index index)
+            {
+                return new Expr.IndexSet(index.Object, index.Bracket, index.IndexValue, value);
+            }
 
             Error(equals, "Invalid assignment target.");
         }
@@ -441,6 +445,12 @@ public sealed class Parser(List<Token> tokens, IErrorReporter errors)
             {
                 Token name = Consume(TokenType.Identifier, "Expect property name after '.'.");
                 expr = new Expr.Get(expr, name);
+            }
+            else if (Match(TokenType.LeftBracket))
+            {
+                var indexValue = Expression();
+                var bracket = Consume(TokenType.RightBracket, "Expect ']' after index.");
+                expr = new Expr.Index(expr, bracket, indexValue);
             }
             else break;
         }

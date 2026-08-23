@@ -63,6 +63,23 @@ public sealed class Resolver(Interpreter interpreter, IErrorReporter errors) : E
         return null;
     }
 
+    public object? VisitIndexExpr(Expr.Index expr)
+    {
+        Resolve(expr.Object);
+        Resolve(expr.IndexValue);
+
+        return null;
+    }
+
+    public object? VisitIndexSetExpr(Expr.IndexSet expr)
+    {
+        Resolve(expr.Object);
+        Resolve(expr.IndexValue);
+        Resolve(expr.Value);
+
+        return null;
+    }
+
     public object? VisitLiteralExpr(Expr.Literal expr)
     {
         return null;

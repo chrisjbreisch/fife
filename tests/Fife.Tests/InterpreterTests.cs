@@ -445,6 +445,58 @@ public sealed class InterpreterTests
     }
 
     [TestMethod]
+    public void ReadsAndWritesAListItemWithBracketSyntax()
+    {
+        Assert.AreEqual("a\n[a, z, c]", Run(
+            "var list = List(\"a\", \"b\", \"c\")\n"
+            + "writeln(list[0])\nlist[1] = \"z\"\nwriteln(list)\n"));
+    }
+
+    [TestMethod]
+    public void IteratesOverAListWithBracketSyntax()
+    {
+        Assert.AreEqual("a\nb\nc", Run(
+            "var list = List(\"a\", \"b\", \"c\")\n"
+            + "for (var i = 0; i < list.length; i = i + 1) {\nwriteln(list[i])\n}\n"));
+    }
+
+    [TestMethod]
+    public void ReportsOutOfRangeBracketIndices()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var list = List(1, 2)\nwriteln(list[5])\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "'index' is out of range.");
+    }
+
+    [TestMethod]
+    public void ReportsIndexingANonIndexableValue()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var x = 1\nwriteln(x[0])\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only indexable values support '[]'.");
+    }
+
+    [TestMethod]
+    public void ReportsIndexAssignmentOnANonIndexableValue()
+    {
+        StringWriter output = new();
+        ConsoleErrorReporter errors = new(output);
+        FifeEngine engine = new(errors, output);
+        engine.Run("var x = 1\nx[0] = 2\n");
+
+        Assert.IsTrue(engine.HadRuntimeError);
+        StringAssert.Contains(output.ToString(), "Only indexable values support '[]='.");
+    }
+
+    [TestMethod]
     public void ReportsAssigningToAListField()
     {
         StringWriter output = new();

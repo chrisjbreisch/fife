@@ -1,7 +1,7 @@
 namespace Fife.Core;
 
 /// <summary>Native-backed, resizable list exposed to fife through <see cref="IFifeObject"/>.</summary>
-public sealed class FifeListInstance(IEnumerable<object?> items) : IFifeObject
+public sealed class FifeListInstance(IEnumerable<object?> items) : IFifeObject, IFifeIndexable
 {
     private readonly List<object?> _items = [.. items];
 
@@ -42,6 +42,11 @@ public sealed class FifeListInstance(IEnumerable<object?> items) : IFifeObject
 
     public void Set(Token name, object? value) =>
         throw new RuntimeError(name, "Lists have no settable fields; use set(index, value).");
+
+    public object? GetIndex(Token bracket, object? index) => _items[RequireIndex(index, bracket, "index")];
+
+    public void SetIndex(Token bracket, object? index, object? value) =>
+        _items[RequireIndex(index, bracket, "index")] = value;
 
     private int RequireIndex(object? argument, Token name, string parameterName)
     {

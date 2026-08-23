@@ -21,6 +21,11 @@ public sealed class AstPrinter : Expr.IVisitor<string>, Stmt.IVisitor<string>
 
     public string VisitGroupingExpr(Expr.Grouping expr) => Parenthesize("group", expr.Expression);
 
+    public string VisitIndexExpr(Expr.Index expr) => Parenthesize("[]", expr.Object, expr.IndexValue);
+
+    public string VisitIndexSetExpr(Expr.IndexSet expr) =>
+        Parenthesize("[]=", expr.Object, expr.IndexValue, expr.Value);
+
     public string VisitLiteralExpr(Expr.Literal expr) => Interpreter.Stringify(expr.Value);
 
     public string VisitLogicalExpr(Expr.Logical expr) => Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);

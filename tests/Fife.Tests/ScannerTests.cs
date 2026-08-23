@@ -48,6 +48,19 @@ public sealed class ScannerTests
     }
 
     [TestMethod]
+    public void ScansBrackets()
+    {
+        var tokens = Scan("a[0]");
+
+        CollectionAssert.AreEqual(
+            new[]
+            {
+                TokenType.Identifier, TokenType.LeftBracket, TokenType.Number, TokenType.RightBracket, TokenType.Eof
+            },
+            tokens.Select(t => t.Type).ToArray());
+    }
+
+    [TestMethod]
     public void ScansIntKeyword()
     {
         var tokens = Scan("int x");

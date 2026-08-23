@@ -11,6 +11,8 @@ public abstract class Expr
         T VisitCallExpr(Call expr);
         T VisitGetExpr(Get expr);
         T VisitGroupingExpr(Grouping expr);
+        T VisitIndexExpr(Index expr);
+        T VisitIndexSetExpr(IndexSet expr);
         T VisitLiteralExpr(Literal expr);
         T VisitLogicalExpr(Logical expr);
         T VisitPostfixExpr(Postfix expr);
@@ -50,6 +52,23 @@ public abstract class Expr
         public Token Name { get; } = name;
 
         public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitGetExpr(this);
+    }
+
+    public sealed class Index(Expr obj, Token bracket, Expr index) : Expr
+    {
+        public Expr Object { get; } = obj;
+        public Token Bracket { get; } = bracket;
+        public Expr IndexValue { get; } = index;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitIndexExpr(this);
+    }
+
+    public sealed class IndexSet(Expr obj, Token bracket, Expr index, Expr value) : Expr
+    {
+        public Expr Object { get; } = obj;
+        public Token Bracket { get; } = bracket;
+        public Expr IndexValue { get; } = index;
+        public Expr Value { get; } = value;
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitIndexSetExpr(this);
     }
 
     public sealed class Grouping(Expr expression) : Expr

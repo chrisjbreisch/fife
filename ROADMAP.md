@@ -13,34 +13,21 @@ call-stack tracing, and exception handling.
 - `void` / `FifeType.None` is intentionally out of scope. Omitting a return type already permits a
   function to return no value, so a separate type is not currently worth the extra semantics.
 
-## 1. Indexing
-
-Add indexing before the remaining collection types are implemented:
-
-- Parse `value[index]`.
-- Add indexed assignment, `value[index] = newValue`.
-- Add `Expr.Index` and the corresponding set form.
-- Define index error behavior through the exception system.
-- Make the protocol usable by lists, strings, vectors, and matrices.
-
-`List` shipped ahead of this using method calls (`get`/`set`) instead of `[...]`, since the host
-object protocol already covered it. `[...]` syntax can be layered on top of `List` later without
-changing its `get`/`set` semantics.
-
-## 2. Standard Library Objects
+## 1. Standard Library Objects
 
 Implement native-backed objects using the host object protocol:
 
 - `List` — done; see Completed Foundations.
 - `Stack` — done; see Completed Foundations.
 - `Queue` — done; see Completed Foundations.
+- `Dictionary`/`Map` — planned next, using the `IFifeIndexable` protocol for `map[key]` access.
 - `Matrix`
 - `Vector`
 
 Each type should have focused behavior tests and documented construction, member, and error
 semantics. Standard-library failures should use the exception system where recovery is useful.
 
-## 3. Operator Dispatch Decision
+## 2. Operator Dispatch Decision
 
 Decide how objects participate in operators before adding substantial matrix/vector APIs:
 
@@ -72,6 +59,9 @@ runtime errors.
   `length`/`get`/`set`/`add`/`remove`/`removeAt`/`contains`/`indexOf`
 - Native `Stack` (`push`/`pop`/`peek`/`isEmpty`) and `Queue` (`enqueue`/`dequeue`/`peek`/`isEmpty`)
   types, same `IFifeObject` pattern as `List`
+- `[...]` indexing: `value[index]` and `value[index] = newValue`, via a new `IFifeIndexable`
+  protocol (`GetIndex`/`SetIndex`). `List` implements it alongside its existing `get`/`set`
+  methods; both do the same range/type checking.
 
 ## Deliberately Deferred
 

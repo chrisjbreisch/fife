@@ -498,6 +498,19 @@ Lists expose members the same way strings and numbers do:
 `get`, `set`, and `removeAt` report a run-time error for a non-integer or out-of-range index.
 Lists have no settable fields — assigning to `list.name` is a run-time error; use `set` instead.
 
+Lists also support `[...]` indexing, equivalent to `get`/`set`:
+
+```fife
+var numbers = List(1, 2, 3)
+writeln(numbers[0])   // 1
+numbers[1] = 9
+writeln(numbers)       // [1, 9, 3]
+```
+
+`value[index]` and `value[index] = newValue` work on any type that implements the `[]` protocol
+(currently only `List`); using them on anything else is a run-time error. Out-of-range or
+non-integer indices report the same error as `get`/`set`.
+
 There is no dedicated loop syntax for lists yet, so iterate with an ordinary `for` loop:
 
 ```fife

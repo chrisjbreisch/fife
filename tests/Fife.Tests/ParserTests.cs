@@ -110,6 +110,14 @@ public sealed class ParserTests
     }
 
     [TestMethod]
+    public void ParsesIndexAccessAndAssignment()
+    {
+        Assert.AreEqual("(; ([] a 0))", Print("a[0]\n"));
+        Assert.AreEqual("(; ([]= a 0 1))", Print("a[0] = 1\n"));
+        Assert.AreEqual("(; ([] (. a b) 0))", Print("a.b[0]\n"));
+    }
+
+    [TestMethod]
     public void ParsesThisInMethods()
     {
         Assert.AreEqual(

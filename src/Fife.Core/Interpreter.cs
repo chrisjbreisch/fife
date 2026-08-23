@@ -408,6 +408,27 @@ public sealed class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
 
     public object? VisitGroupingExpr(Expr.Grouping expr) => Evaluate(expr.Expression);
 
+    public object? VisitIndexExpr(Expr.Index expr)
+    {
+        var obj = Evaluate(expr.Object);
+        if (obj is not IFifeIndexable indexable)
+            throw new RuntimeError(expr.Bracket, "Only indexable values support '[]'.");
+
+        return indexable.GetIndex(expr.Bracket, Evaluate(expr.IndexValue));
+    }
+
+    public object? VisitIndexSetExpr(Expr.IndexSet expr)
+    {
+        var obj = Evaluate(expr.Object);
+        if (obj is not IFifeIndexable indexable)
+            throw new RuntimeError(expr.Bracket, "Only indexable values support '[]='.");
+
+        var index = Evaluate(expr.IndexValue);
+        var value = Evaluate(expr.Value);
+        indexable.SetIndex(expr.Bracket, index, value);
+        return value;
+    }
+
     public object? VisitLiteralExpr(Expr.Literal expr) => expr.Value;
 
     public object? VisitLogicalExpr(Expr.Logical expr)
